@@ -2,11 +2,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/hero-image.jpg';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-warm">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-warm">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.03]">
         <div className="absolute inset-0" style={{
@@ -35,26 +34,25 @@ const HeroSection = () => {
             </motion.div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
-              Heritage in Motion,
-              <span className="block text-gradient-primary">Woven Together</span>
+              Premium African
+              <span className="block text-gradient-primary">Textiles Online</span>
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl mb-8 leading-relaxed">
-              Discover Africa's most authentic and premium textiles.
-              Visualize fabrics on custom styles before you buy—where
-              time-honored craftsmanship meets modern fashion.
+              Shop authentic Ankara, Kente, Adire and Aso-Oke fabrics.
+              Quality wax prints delivered to Nigeria and Benin Republic.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="hero" size="xl" asChild>
                 <Link to="/gallery">
-                  Explore Fabrics
+                  Shop Now
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
-              <Button variant="studio" size="xl" asChild>
-                <Link to="/studio">
-                  Try the Studio
+              <Button variant="outline" size="xl" asChild>
+                <Link to="/gallery?new=true">
+                  New Arrivals
                 </Link>
               </Button>
             </div>
@@ -64,7 +62,7 @@ const HeroSection = () => {
               {[
                 { value: '500+', label: 'Premium Fabrics' },
                 { value: '2', label: 'Countries Served' },
-                { value: '3D', label: 'Visualization' },
+                { value: '24h', label: 'Fast Delivery' },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -79,21 +77,38 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          {/* Right Image */}
+          {/* Right Image Grid */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative"
+            className="relative hidden lg:block"
           >
-            <div className="relative aspect-[3/4] lg:aspect-[4/5] rounded-3xl overflow-hidden shadow-elevated">
-              <img
-                src={heroImage}
-                alt="African fashion model in vibrant Ankara dress"
-                className="w-full h-full object-cover"
-              />
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
+            <div className="grid grid-cols-2 gap-4">
+              {/* Main Image */}
+              <div className="col-span-2 aspect-[16/9] rounded-2xl overflow-hidden shadow-elevated">
+                <img
+                  src="/Cloth Gallery/Super Gandaho (1).webp"
+                  alt="Premium African fabric"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Secondary Images */}
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-soft">
+                <img
+                  src="/Cloth Gallery/Kente Gold (1).webp"
+                  alt="Kente fabric"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-soft">
+                <img
+                  src="/Cloth Gallery/Supreme VIP Satin (1).webp"
+                  alt="VIP Satin fabric"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
 
             {/* Floating Badge */}
@@ -101,15 +116,15 @@ const HeroSection = () => {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8 }}
-              className="absolute -left-4 lg:-left-8 bottom-16 bg-card p-4 rounded-2xl shadow-elevated"
+              className="absolute -left-4 bottom-16 bg-card p-4 rounded-2xl shadow-elevated"
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-hero flex items-center justify-center">
-                  <span className="text-2xl">👁️</span>
+                  <span className="text-2xl">🚚</span>
                 </div>
                 <div>
-                  <div className="font-semibold">3D Preview</div>
-                  <div className="text-sm text-muted-foreground">See before you buy</div>
+                  <div className="font-semibold">Free Delivery</div>
+                  <div className="text-sm text-muted-foreground">On orders ₦50k+</div>
                 </div>
               </div>
             </motion.div>

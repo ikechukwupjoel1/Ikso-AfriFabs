@@ -1,4 +1,6 @@
 import HeroSection from '@/components/home/HeroSection';
+import PromoSection from '@/components/home/PromoSection';
+import CategoryShowcase from '@/components/home/CategoryShowcase';
 import FeaturedFabrics from '@/components/home/FeaturedFabrics';
 import StudioPreview from '@/components/home/StudioPreview';
 import WhatsAppCTA from '@/components/home/WhatsAppCTA';
@@ -14,9 +16,11 @@ const Index = () => {
       <Header currency={currency} onToggleCurrency={toggleCurrency} />
       <main>
         <HeroSection />
+        <PromoSection />
+        <CategoryShowcase />
         <FeaturedFabrics currency={currency} />
-        <StudioPreview />
         <WhatsAppCTA />
+        <StudioPreview />
       </main>
       <Footer />
     </div>
