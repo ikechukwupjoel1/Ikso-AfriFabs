@@ -70,7 +70,7 @@ const FabricDetails = () => {
     };
 
     const handleWhatsAppOrder = () => {
-        const whatsappNumber = '2348012345678';
+        const whatsappNumber = '2348165715235';
         const message = encodeURIComponent(
             `Hello! I'd like to order:\n\n` +
             `Fabric: ${fabric.name}\n` +

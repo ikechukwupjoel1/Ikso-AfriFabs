@@ -142,7 +142,7 @@ const StudioPage = () => {
       `Total: ${formatPrice(price * (yardage / 6), currency)}\n\n` +
       `Please confirm availability!`
     );
-    window.open(`https://wa.me/2348012345678?text=${message}`, '_blank');
+    window.open(`https://wa.me/2348165715235?text=${message}`, '_blank');
   };
 
   if (isLoading) {

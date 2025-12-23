@@ -18,7 +18,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
     const total = getCartTotal(currency);
 
     const handleWhatsAppCheckout = () => {
-        const whatsappNumber = '2348012345678'; // Replace with actual number
+        const whatsappNumber = '2348165715235';
 
         let message = "Hello! I'd like to order the following fabrics from Ikso AfriFabs:\n\n";
 

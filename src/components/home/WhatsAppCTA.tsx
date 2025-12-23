@@ -10,7 +10,7 @@ const benefits = [
 ];
 
 const WhatsAppCTA = () => {
-  const whatsappNumber = '2348012345678'; // Replace with actual number
+  const whatsappNumber = '2348165715235';
   const message = encodeURIComponent('Hello! I\'m interested in ordering fabrics from IksoTech AfriFabs.');
 
   return (
@@ -37,7 +37,7 @@ const WhatsAppCTA = () => {
                 Ready to Order?
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-6">
-                Skip the checkout hassle. Send your order directly to our 
+                Skip the checkout hassle. Send your order directly to our
                 WhatsApp for personalized service and the best deals.
               </p>
 
@@ -86,7 +86,7 @@ const WhatsAppCTA = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Floating elements */}
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
