@@ -1,0 +1,193 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, SlidersHorizontal, Grid, LayoutList, Loader2 } from 'lucide-react';
+
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import FabricCard from '@/components/fabric/FabricCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useCurrency } from '@/hooks/useCurrency';
+import { useFabrics } from '@/hooks/useFabrics'; // Import the new hook
+import { cn } from '@/lib/utils';
+
+const categories = [
+  { id: 'all', label: 'All Fabrics' },
+  { id: 'ankara', label: 'Ankara' },
+  { id: 'kente', label: 'Kente' },
+  { id: 'adire', label: 'Adire' },
+  { id: 'aso-oke', label: 'Aso-Oke' },
+];
+
+const GalleryPage = () => {
+  const { currency, toggleCurrency } = useCurrency();
+  const { data: fabrics = [], isLoading, error } = useFabrics(); // Use the hook
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const filteredFabrics = fabrics.filter(fabric => {
+    const matchesSearch = fabric.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fabric.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      fabric.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesCategory = selectedCategory === 'all' || fabric.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header currency={currency} onToggleCurrency={toggleCurrency} />
+
+      <main className="pt-24 pb-12">
+        <div className="container mx-auto px-4">
+          {/* Hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="font-display text-4xl md:text-5xl mb-4">
+              Premium African Fabrics
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Explore our curated collection of authentic wax prints, hand-picked
+              from the finest manufacturers across West Africa.
+            </p>
+          </motion.div>
+
+          {/* Filters */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            {/* Search and View Toggle */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search fabrics, brands, or styles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline">
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  Filters
+                </Button>
+                <div className="flex border border-border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={cn(
+                      "p-2 transition-colors",
+                      viewMode === 'grid' ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+                    )}
+                  >
+                    <Grid className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={cn(
+                      "p-2 transition-colors",
+                      viewMode === 'list' ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+                    )}
+                  >
+                    <LayoutList className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Category Pills */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                    selectedCategory === category.id
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  )}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Content Area */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading fabrics...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">
+              <p>Error loading fabrics. Please check your connection.</p>
+              <p className="text-sm mt-2 text-muted-foreground">{(error as Error).message}</p>
+            </div>
+          ) : (
+            <>
+              {/* Results Count */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="mb-6"
+              >
+                <p className="text-muted-foreground">
+                  Showing <span className="font-semibold text-foreground">{filteredFabrics.length}</span> fabrics
+                </p>
+              </motion.div>
+
+              {/* Fabric Grid */}
+              {filteredFabrics.length > 0 ? (
+                <div className={cn(
+                  "grid gap-6",
+                  viewMode === 'grid'
+                    ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : "grid-cols-1"
+                )}>
+                  {filteredFabrics.map((fabric, index) => (
+                    <motion.div
+                      key={fabric.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <FabricCard fabric={fabric} currency={currency} />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20"
+                >
+                  <div className="text-6xl mb-4">🔍</div>
+                  <h3 className="font-display text-xl mb-2">No fabrics found</h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or filters
+                  </p>
+                </motion.div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default GalleryPage;
