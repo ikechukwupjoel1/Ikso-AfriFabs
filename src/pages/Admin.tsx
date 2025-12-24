@@ -47,6 +47,7 @@ import Footer from '@/components/layout/Footer';
 import { Currency } from '@/types/fabric';
 import { FabricDialog } from '@/components/admin/FabricDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
+import { fabrics as localFabrics } from '@/data/fabrics';
 
 // Super admin email
 const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
@@ -80,6 +81,8 @@ const Admin = () => {
     const [newAdminRole, setNewAdminRole] = useState('viewer');
     const [showFabricDialog, setShowFabricDialog] = useState(false);
     const [selectedFabric, setSelectedFabric] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
 
     // Check admin access
     useEffect(() => {
@@ -150,15 +153,23 @@ const Admin = () => {
 
     const fetchFabrics = async () => {
         try {
+            // Try to fetch from Supabase first
             const { data, error } = await supabase
                 .from('fabrics')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setFabrics(data || []);
+            // If database has fabrics, use them; otherwise use local data
+            if (data && data.length > 0) {
+                setFabrics(data);
+            } else {
+                // Use local fabrics data
+                setFabrics(localFabrics);
+            }
         } catch (err) {
             console.error('Error fetching fabrics:', err);
+            // Fallback to local data on error
+            setFabrics(localFabrics);
         }
     };
 
@@ -312,6 +323,11 @@ const Admin = () => {
     const toggleCurrency = () => {
         setCurrency(prev => prev === 'NGN' ? 'CFA' : 'NGN');
     };
+
+    // Filter fabrics based on search term
+    const filteredFabrics = fabrics.filter(f =>
+        f.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const canManageProducts = adminRole === 'super_admin' || adminRole === 'product_manager';
     const canManageOrders = adminRole === 'super_admin' || adminRole === 'order_manager';
@@ -550,6 +566,11 @@ const Admin = () => {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <p className="text-sm text-muted-foreground">
+                                                Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredFabrics.length)} of {filteredFabrics.length} fabrics
+                                            </p>
+                                        </div>
                                         {fabrics.length > 0 ? (
                                             <Table>
                                                 <TableHeader>
@@ -565,6 +586,7 @@ const Admin = () => {
                                                 <TableBody>
                                                     {fabrics
                                                         .filter(f => f.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+                                                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                                                         .map((fabric) => (
                                                             <TableRow key={fabric.id}>
                                                                 <TableCell>
@@ -612,7 +634,32 @@ const Admin = () => {
                                         ) : (
                                             <div className="text-center py-12 text-muted-foreground">
                                                 <Layers className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                                <p>No fabrics in database. Using local data.</p>
+                                                <p>No fabrics found.</p>
+                                            </div>
+                                        )}
+
+                                        {/* Pagination Controls */}
+                                        {filteredFabrics.length > itemsPerPage && (
+                                            <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                    disabled={currentPage === 1}
+                                                >
+                                                    Previous
+                                                </Button>
+                                                <span className="text-sm text-muted-foreground">
+                                                    Page {currentPage} of {Math.ceil(filteredFabrics.length / itemsPerPage)}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredFabrics.length / itemsPerPage), prev + 1))}
+                                                    disabled={currentPage >= Math.ceil(filteredFabrics.length / itemsPerPage)}
+                                                >
+                                                    Next
+                                                </Button>
                                             </div>
                                         )}
                                     </CardContent>
