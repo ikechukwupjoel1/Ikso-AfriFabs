@@ -58,9 +58,9 @@ const Header = ({ currency, onToggleCurrency }: HeaderProps) => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
               <img
-                src="/logo.png"
+                src="/Ikso AfriFabs Logo Horizontal .webp"
                 alt="Ikso AfriFabs"
-                className="h-10 md:h-12 w-auto"
+                className="h-8 md:h-10 w-auto"
               />
             </Link>
 

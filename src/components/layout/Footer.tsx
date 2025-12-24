@@ -10,9 +10,9 @@ const Footer = () => {
           <div className="md:col-span-2">
             <Link to="/" className="inline-block mb-4">
               <img
-                src="/logo.png"
+                src="/Ikso AfriFabs Logo Horizontal .webp"
                 alt="Ikso AfriFabs"
-                className="h-12 w-auto"
+                className="h-10 w-auto"
               />
             </Link>
             <p className="text-primary font-display text-lg mb-2">The Fabric of Us.</p>
