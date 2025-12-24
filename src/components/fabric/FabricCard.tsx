@@ -56,6 +56,7 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
           <motion.img
             src={fabric.image}
             alt={fabric.name}
+            loading="lazy"
             className="w-full h-full object-cover"
             animate={{ scale: isHovered ? 1.08 : 1 }}
             transition={{ duration: 0.4 }}

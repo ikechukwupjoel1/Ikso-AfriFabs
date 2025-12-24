@@ -21,10 +21,13 @@ const categories = [
 
 const GalleryPage = () => {
   const { currency, toggleCurrency } = useCurrency();
-  const { data: fabrics = [], isLoading, error } = useFabrics(); // Use the hook
+  const { data: fabrics = [], isLoading, error } = useFabrics();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState(12); // Pagination: show 12 initially
+
+  const ITEMS_PER_PAGE = 12;
 
   const filteredFabrics = fabrics.filter(fabric => {
     const matchesSearch = fabric.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,6 +38,24 @@ const GalleryPage = () => {
 
     return matchesSearch && matchesCategory;
   });
+
+  // Reset visible count when filters change
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
+  const loadMore = () => {
+    setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+  };
+
+  const visibleFabrics = filteredFabrics.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredFabrics.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +93,7 @@ const GalleryPage = () => {
                   type="text"
                   placeholder="Search fabrics, brands, or styles..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -109,7 +130,7 @@ const GalleryPage = () => {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategoryChange(category.id)}
                   className={cn(
                     "px-4 py-2 rounded-full text-sm font-medium transition-all",
                     selectedCategory === category.id
@@ -150,23 +171,38 @@ const GalleryPage = () => {
 
               {/* Fabric Grid */}
               {filteredFabrics.length > 0 ? (
-                <div className={cn(
-                  "grid gap-6",
-                  viewMode === 'grid'
-                    ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                    : "grid-cols-1"
-                )}>
-                  {filteredFabrics.map((fabric, index) => (
-                    <motion.div
-                      key={fabric.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <FabricCard fabric={fabric} currency={currency} />
-                    </motion.div>
-                  ))}
-                </div>
+                <>
+                  <div className={cn(
+                    "grid gap-6",
+                    viewMode === 'grid'
+                      ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                      : "grid-cols-1"
+                  )}>
+                    {visibleFabrics.map((fabric, index) => (
+                      <motion.div
+                        key={fabric.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                      >
+                        <FabricCard fabric={fabric} currency={currency} />
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Load More Button */}
+                  {hasMore && (
+                    <div className="text-center mt-8">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={loadMore}
+                      >
+                        Load More ({filteredFabrics.length - visibleCount} remaining)
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}
