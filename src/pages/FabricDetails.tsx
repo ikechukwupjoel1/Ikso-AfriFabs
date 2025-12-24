@@ -11,8 +11,9 @@ import { useCurrency } from '@/hooks/useCurrency';
 import { useFabrics } from '@/hooks/useFabrics';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/data/fabrics';
+import { calculatePrice, formatPrice } from '@/lib/currency';
 
 const FabricDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -60,7 +61,9 @@ const FabricDetails = () => {
         );
     }
 
-    const price = currency === 'NGN' ? fabric.priceNGN : fabric.priceCFA;
+    const { rate } = useExchangeRate();
+
+    const price = calculatePrice(fabric.priceCFA, currency, rate);
     const totalPrice = price * (yardage / fabric.yardage);
 
     const handleAddToCart = () => {

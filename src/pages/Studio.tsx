@@ -10,9 +10,11 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { modelTypes, formatPrice } from '@/data/fabrics';
+import { modelTypes } from '@/data/fabrics';
+import { calculatePrice, formatPrice } from '@/lib/currency';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useFabrics } from '@/hooks/useFabrics';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { Fabric } from '@/types/fabric';
 import { cn } from '@/lib/utils';
 
@@ -133,7 +135,8 @@ const StudioPage = () => {
   const handleWhatsAppOrder = () => {
     if (!selectedFabric) return;
 
-    const price = currency === 'NGN' ? selectedFabric.priceNGN : selectedFabric.priceCFA;
+    const { rate } = useExchangeRate();
+    const price = calculatePrice(selectedFabric.priceCFA, currency, rate);
     const message = encodeURIComponent(
       `Hi! I'd like to order:\n\n` +
       `Fabric: ${selectedFabric.name}\n` +
@@ -304,7 +307,7 @@ const StudioPage = () => {
                     <p className="text-sm text-muted-foreground">{selectedFabric.brand}</p>
                     <p className="text-primary font-semibold mt-1">
                       {formatPrice(
-                        currency === 'NGN' ? selectedFabric.priceNGN : selectedFabric.priceCFA,
+                        calculatePrice(selectedFabric.priceCFA, currency, rate),
                         currency
                       )}
                     </p>
@@ -368,7 +371,7 @@ const StudioPage = () => {
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-display text-2xl text-primary">
                       {formatPrice(
-                        (currency === 'NGN' ? selectedFabric.priceNGN : selectedFabric.priceCFA) * (yardage / 6),
+                        calculatePrice(selectedFabric.priceCFA, currency, rate) * (yardage / 6),
                         currency
                       )}
                     </span>

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Fabric, Currency } from '@/types/fabric';
+import { calculatePrice } from '@/lib/currency';
 
 export interface CartItem {
     fabricId: string;
@@ -14,7 +15,7 @@ interface CartContextType {
     removeFromCart: (fabricId: string) => void;
     updateQuantity: (fabricId: string, yardage: number) => void;
     clearCart: () => void;
-    getCartTotal: (currency: Currency) => number;
+    getCartTotal: (currency: Currency, exchangeRate: number) => number;
     cartCount: number;
     isInCart: (fabricId: string) => boolean;
 }
@@ -86,9 +87,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems([]);
     };
 
-    const getCartTotal = (currency: Currency) => {
+    const getCartTotal = (currency: Currency, exchangeRate: number) => {
         return items.reduce((total, item) => {
-            const price = currency === 'NGN' ? item.fabric.priceNGN : item.fabric.priceCFA;
+            const price = calculatePrice(item.fabric.priceCFA, currency, exchangeRate);
             return total + (price * (item.yardage / item.fabric.yardage));
         }, 0);
     };

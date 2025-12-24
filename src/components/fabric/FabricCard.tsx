@@ -5,9 +5,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Fabric, Currency } from '@/types/fabric';
-import { formatPrice } from '@/data/fabrics';
+import { calculatePrice, formatPrice } from '@/lib/currency';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { cn } from '@/lib/utils';
 
 interface FabricCardProps {
@@ -21,8 +22,10 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
 
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { rate } = useExchangeRate();
 
-  const price = currency === 'NGN' ? fabric.priceNGN : fabric.priceCFA;
+  const price = calculatePrice(fabric.priceCFA, currency, rate);
+  const formattedPrice = formatPrice(price, currency);
   const isLiked = isFavorite(fabric.id);
   const inCart = isInCart(fabric.id);
 
@@ -145,7 +148,7 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
         <div className="flex items-center justify-between">
           <div>
             <div className="font-semibold text-primary text-lg">
-              {formatPrice(price, currency)}
+              {formattedPrice}
             </div>
             <div className="text-xs text-muted-foreground">
               per {fabric.yardage} yards

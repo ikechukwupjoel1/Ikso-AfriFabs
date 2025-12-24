@@ -3,8 +3,9 @@ import { X, Minus, Plus, ShoppingBag, MessageCircle, Trash2 } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
 import { Currency } from '@/types/fabric';
-import { formatPrice } from '@/data/fabrics';
+import { calculatePrice, formatPrice } from '@/lib/currency';
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -14,8 +15,9 @@ interface CartDrawerProps {
 
 const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
     const { items, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
+    const { rate } = useExchangeRate();
 
-    const total = getCartTotal(currency);
+    const total = getCartTotal(currency, rate);
 
     const handleWhatsAppCheckout = () => {
         const whatsappNumber = '2348165715235';
@@ -23,7 +25,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
         let message = "Hello! I'd like to order the following fabrics from Ikso AfriFabs:\n\n";
 
         items.forEach((item, index) => {
-            const price = currency === 'NGN' ? item.fabric.priceNGN : item.fabric.priceCFA;
+            const price = calculatePrice(item.fabric.priceCFA, currency, rate);
             message += `${index + 1}. ${item.fabric.name}\n`;
             message += `   - Yardage: ${item.yardage} yards\n`;
             message += `   - Price: ${formatPrice(price, currency)}\n\n`;
@@ -80,7 +82,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
                                 </div>
                             ) : (
                                 items.map((item) => {
-                                    const price = currency === 'NGN' ? item.fabric.priceNGN : item.fabric.priceCFA;
+                                    const price = calculatePrice(item.fabric.priceCFA, currency, rate);
                                     return (
                                         <motion.div
                                             key={item.fabricId}

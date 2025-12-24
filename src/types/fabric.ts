@@ -3,8 +3,7 @@ export interface Fabric {
   name: string;
   brand: string;
   description: string;
-  priceNGN: number;
-  priceCFA: number;
+  priceCFA: number; // Base price in CFA
   image: string;
   category: 'ankara' | 'kente' | 'adire' | 'aso-oke';
   inStock: boolean;
