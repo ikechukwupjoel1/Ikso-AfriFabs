@@ -94,11 +94,11 @@ const HeroSection = () => {
         <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-8 lg:gap-12">
 
           {/* TOP (Mobile) / RIGHT (Desktop): Fabric "Rolls" */}
-          <div className="w-full lg:w-1/2 order-1 lg:order-2 relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-full flex items-center justify-center">
+          <div className="w-full lg:w-1/2 order-1 lg:order-2 relative h-[300px] sm:h-[450px] md:h-[500px] lg:h-full flex items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
-                className="flex items-start justify-center gap-2 md:gap-4 h-full pt-4 md:pt-12"
+                className="flex items-start justify-between w-full h-full pt-4 md:pt-12 gap-1 md:gap-4 px-1"
               >
                 {current.images.map((img, idx) => (
                   <motion.div
@@ -112,10 +112,10 @@ const HeroSection = () => {
                       ease: [0.16, 1, 0.3, 1]
                     }}
                     style={{ originY: 0 }}
-                    className={`relative w-[55px] sm:w-[80px] md:w-[100px] xl:w-[110px] overflow-hidden rounded-b-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]
-                      ${idx === 0 || idx === 4 ? 'hidden sm:block h-[200px] sm:h-[300px] md:h-[350px] mt-12' :
-                        idx === 1 || idx === 3 ? 'h-[250px] sm:h-[350px] md:h-[450px] mt-6' :
-                          'h-[300px] sm:h-[400px] md:h-[550px]'}`}
+                    className={`relative flex-1 max-w-[18%] md:max-w-[110px] overflow-hidden rounded-b-[20px] md:rounded-b-[40px] shadow-[0_10px_30px_rgba(0,0,0,0.5)]
+                      ${idx === 0 || idx === 4 ? 'h-[180px] sm:h-[250px] md:h-[350px] mt-8 md:mt-12' :
+                        idx === 1 || idx === 3 ? 'h-[220px] sm:h-[300px] md:h-[450px] mt-4 md:mt-6' :
+                          'h-[260px] sm:h-[350px] md:h-[550px]'}`}
                   >
                     <img
                       src={img}
