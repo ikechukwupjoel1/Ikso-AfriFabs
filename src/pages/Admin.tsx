@@ -45,6 +45,7 @@ import { toast } from 'sonner';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Currency } from '@/types/fabric';
+import { FabricDialog } from '@/components/admin/FabricDialog';
 
 // Super admin email
 const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
@@ -76,6 +77,8 @@ const Admin = () => {
     const [showAddAdminDialog, setShowAddAdminDialog] = useState(false);
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminRole, setNewAdminRole] = useState('viewer');
+    const [showFabricDialog, setShowFabricDialog] = useState(false);
+    const [selectedFabric, setSelectedFabric] = useState<any>(null);
 
     // Check admin access
     useEffect(() => {
@@ -253,6 +256,27 @@ const Admin = () => {
         } catch (err: any) {
             console.error('Error removing admin:', err);
             toast.error(err.message || 'Failed to remove admin');
+        }
+    };
+
+    const handleDeleteFabric = async (fabricId: string, fabricName: string) => {
+        if (!confirm(`Are you sure you want to delete "${fabricName}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('fabrics')
+                .delete()
+                .eq('id', fabricId);
+
+            if (error) throw error;
+
+            toast.success('Fabric deleted successfully');
+            fetchFabrics();
+        } catch (err: any) {
+            console.error('Error deleting fabric:', err);
+            toast.error(err.message || 'Failed to delete fabric');
         }
     };
 
@@ -505,7 +529,13 @@ const Admin = () => {
                                                         className="pl-9 w-[200px]"
                                                     />
                                                 </div>
-                                                <Button size="sm">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setSelectedFabric(null);
+                                                        setShowFabricDialog(true);
+                                                    }}
+                                                >
                                                     <Plus className="w-4 h-4 mr-2" />
                                                     Add Fabric
                                                 </Button>
@@ -548,10 +578,22 @@ const Admin = () => {
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <div className="flex gap-1">
-                                                                        <Button variant="ghost" size="icon">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            onClick={() => {
+                                                                                setSelectedFabric(fabric);
+                                                                                setShowFabricDialog(true);
+                                                                            }}
+                                                                        >
                                                                             <Edit2 className="w-4 h-4" />
                                                                         </Button>
-                                                                        <Button variant="ghost" size="icon" className="text-destructive">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="text-destructive"
+                                                                            onClick={() => handleDeleteFabric(fabric.id, fabric.name)}
+                                                                        >
                                                                             <Trash2 className="w-4 h-4" />
                                                                         </Button>
                                                                     </div>
@@ -710,6 +752,14 @@ const Admin = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Fabric Dialog */}
+            <FabricDialog
+                open={showFabricDialog}
+                onOpenChange={setShowFabricDialog}
+                fabric={selectedFabric}
+                onSuccess={fetchFabrics}
+            />
 
             <Footer />
         </div>
