@@ -27,7 +27,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
         items.forEach((item, index) => {
             const price = calculatePrice(item.fabric.priceCFA, currency, rate);
             message += `${index + 1}. ${item.fabric.name}\n`;
-            message += `   - Yardage: ${item.yardage} yards\n`;
+            message += `   - Quantity: ${item.pieces} piece${item.pieces > 1 ? 's' : ''} (${item.pieces * 6} yards)\n`;
             message += `   - Price: ${formatPrice(price, currency)}\n\n`;
         });
 
@@ -115,16 +115,16 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
                                                         variant="outline"
                                                         size="icon"
                                                         className="w-7 h-7"
-                                                        onClick={() => updateQuantity(item.fabricId, item.yardage - 1)}
+                                                        onClick={() => updateQuantity(item.fabricId, item.pieces - 1)}
                                                     >
                                                         <Minus className="w-3 h-3" />
                                                     </Button>
-                                                    <span className="text-sm w-12 text-center">{item.yardage} yds</span>
+                                                    <span className="text-sm w-16 text-center">{item.pieces} pc{item.pieces > 1 ? 's' : ''}</span>
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
                                                         className="w-7 h-7"
-                                                        onClick={() => updateQuantity(item.fabricId, item.yardage + 1)}
+                                                        onClick={() => updateQuantity(item.fabricId, item.pieces + 1)}
                                                     >
                                                         <Plus className="w-3 h-3" />
                                                     </Button>

@@ -5,15 +5,15 @@ import { calculatePrice } from '@/lib/currency';
 export interface CartItem {
     fabricId: string;
     fabric: Fabric;
-    yardage: number;
+    pieces: number; // Number of 6-yard pieces
     addedAt: Date;
 }
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (fabric: Fabric, yardage?: number) => void;
+    addToCart: (fabric: Fabric, pieces?: number) => void;
     removeFromCart: (fabricId: string) => void;
-    updateQuantity: (fabricId: string, yardage: number) => void;
+    updateQuantity: (fabricId: string, pieces: number) => void;
     clearCart: () => void;
     getCartTotal: (currency: Currency, exchangeRate: number) => number;
     cartCount: number;
@@ -48,20 +48,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     }, [items]);
 
-    const addToCart = (fabric: Fabric, yardage: number = fabric.yardage) => {
+    const addToCart = (fabric: Fabric, pieces: number = 1) => {
         setItems(prev => {
             const existing = prev.find(item => item.fabricId === fabric.id);
             if (existing) {
                 return prev.map(item =>
                     item.fabricId === fabric.id
-                        ? { ...item, yardage: item.yardage + yardage }
+                        ? { ...item, pieces: item.pieces + pieces }
                         : item
                 );
             }
             return [...prev, {
                 fabricId: fabric.id,
                 fabric,
-                yardage,
+                pieces,
                 addedAt: new Date()
             }];
         });
@@ -71,14 +71,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems(prev => prev.filter(item => item.fabricId !== fabricId));
     };
 
-    const updateQuantity = (fabricId: string, yardage: number) => {
-        if (yardage <= 0) {
+    const updateQuantity = (fabricId: string, pieces: number) => {
+        if (pieces <= 0) {
             removeFromCart(fabricId);
             return;
         }
         setItems(prev =>
             prev.map(item =>
-                item.fabricId === fabricId ? { ...item, yardage } : item
+                item.fabricId === fabricId ? { ...item, pieces } : item
             )
         );
     };
@@ -90,7 +90,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const getCartTotal = (currency: Currency, exchangeRate: number) => {
         return items.reduce((total, item) => {
             const price = calculatePrice(item.fabric.priceCFA, currency, exchangeRate);
-            return total + (price * (item.yardage / item.fabric.yardage));
+            return total + (price * item.pieces); // Price per piece × number of pieces
         }, 0);
     };
 

@@ -151,7 +151,7 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
               {formattedPrice}
             </div>
             <div className="text-xs text-muted-foreground">
-              per {fabric.yardage} yards
+              per piece (6 yards)
             </div>
           </div>
           <div className="flex gap-1">

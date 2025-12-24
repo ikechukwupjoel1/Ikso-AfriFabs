@@ -22,7 +22,7 @@ const FabricDetails = () => {
     const { addToCart, isInCart } = useCart();
     const { toggleFavorite, isFavorite } = useFavorites();
 
-    const [yardage, setYardage] = useState(6);
+    const [pieces, setPieces] = useState(1); // 1 piece = 6 yards
     const [justAdded, setJustAdded] = useState(false);
 
     const fabric = fabrics.find(f => f.id === id);
@@ -64,10 +64,10 @@ const FabricDetails = () => {
     const { rate } = useExchangeRate();
 
     const price = calculatePrice(fabric.priceCFA, currency, rate);
-    const totalPrice = price * (yardage / fabric.yardage);
+    const totalPrice = price * pieces; // Price per piece × number of pieces
 
     const handleAddToCart = () => {
-        addToCart(fabric, yardage);
+        addToCart(fabric, pieces);
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 2000);
     };
@@ -78,7 +78,7 @@ const FabricDetails = () => {
             `Hello! I'd like to order:\n\n` +
             `Fabric: ${fabric.name}\n` +
             `Brand: ${fabric.brand}\n` +
-            `Yardage: ${yardage} yards\n` +
+            `Quantity: ${pieces} piece${pieces > 1 ? 's' : ''} (${pieces * 6} yards)\n` +
             `Price: ${formatPrice(totalPrice, currency)}\n\n` +
             `Please confirm availability.`
         );
@@ -144,10 +144,10 @@ const FabricDetails = () => {
                                     <span className="text-3xl font-display text-primary">
                                         {formatPrice(price, currency)}
                                     </span>
-                                    <span className="text-muted-foreground">per {fabric.yardage} yards</span>
+                                    <span className="text-muted-foreground">per piece (6 yards)</span>
                                 </div>
 
-                                {/* Yardage Selector */}
+                                {/* Pieces Selector */}
                                 <div className="flex items-center gap-4 mt-4">
                                     <span className="text-sm font-medium">Quantity:</span>
                                     <div className="flex items-center gap-2">
@@ -155,23 +155,24 @@ const FabricDetails = () => {
                                             variant="outline"
                                             size="icon"
                                             className="w-9 h-9"
-                                            onClick={() => setYardage(Math.max(1, yardage - 1))}
+                                            onClick={() => setPieces(Math.max(1, pieces - 1))}
                                         >
                                             <Minus className="w-4 h-4" />
                                         </Button>
-                                        <span className="w-16 text-center font-medium">{yardage} yds</span>
+                                        <span className="w-20 text-center font-medium">{pieces} piece{pieces > 1 ? 's' : ''}</span>
                                         <Button
                                             variant="outline"
                                             size="icon"
                                             className="w-9 h-9"
-                                            onClick={() => setYardage(yardage + 1)}
+                                            onClick={() => setPieces(pieces + 1)}
                                         >
                                             <Plus className="w-4 h-4" />
                                         </Button>
                                     </div>
+                                    <span className="text-xs text-muted-foreground">({pieces * 6} yards total)</span>
                                 </div>
 
-                                {yardage !== fabric.yardage && (
+                                {pieces > 1 && (
                                     <div className="mt-4 pt-4 border-t border-border">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Total:</span>

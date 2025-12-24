@@ -116,7 +116,7 @@ const StudioPage = () => {
   const [selectedFabric, setSelectedFabric] = useState<Fabric | null>(null);
   const [selectedModel, setSelectedModel] = useState(modelTypes[0].id);
   const [textureScale, setTextureScale] = useState(2);
-  const [yardage, setYardage] = useState(6);
+  const [pieces, setPieces] = useState(1); // 1 piece = 6 yards
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Initialize selected fabric when data loads
@@ -141,8 +141,8 @@ const StudioPage = () => {
       `Hi! I'd like to order:\n\n` +
       `Fabric: ${selectedFabric.name}\n` +
       `Brand: ${selectedFabric.brand}\n` +
-      `Yardage: ${yardage} yards\n` +
-      `Total: ${formatPrice(price * (yardage / 6), currency)}\n\n` +
+      `Quantity: ${pieces} piece${pieces > 1 ? 's' : ''} (${pieces * 6} yards)\n` +
+      `Total: ${formatPrice(price * pieces, currency)}\n\n` +
       `Please confirm availability!`
     );
     window.open(`https://wa.me/2348165715235?text=${message}`, '_blank');
@@ -350,15 +350,15 @@ const StudioPage = () => {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setYardage(Math.max(1, yardage - 1))}
+                      onClick={() => setPieces(Math.max(1, pieces - 1))}
                     >
-                      -
+                      <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="font-semibold text-lg w-12 text-center">{yardage}</span>
+                    <span className="font-semibold text-lg w-16 text-center">{pieces} pc{pieces > 1 ? 's' : ''}</span>
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setYardage(yardage + 1)}
+                      onClick={() => setPieces(pieces + 1)}
                     >
                       +
                     </Button>
@@ -371,7 +371,7 @@ const StudioPage = () => {
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-display text-2xl text-primary">
                       {formatPrice(
-                        calculatePrice(selectedFabric.priceCFA, currency, rate) * (yardage / 6),
+                        calculatePrice(selectedFabric.priceCFA, currency, rate) * pieces,
                         currency
                       )}
                     </span>

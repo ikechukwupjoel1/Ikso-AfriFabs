@@ -3,11 +3,10 @@ export interface Fabric {
   name: string;
   brand: string;
   description: string;
-  priceCFA: number; // Base price in CFA
+  priceCFA: number; // Base price in CFA per piece (6 yards)
   image: string;
   category: 'ankara' | 'kente' | 'adire' | 'aso-oke';
   inStock: boolean;
-  yardage: number;
   tags: string[];
 }
 
