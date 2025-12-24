@@ -44,70 +44,213 @@ const heroFabrics = [
   },
 ];
 
+// Animation variants for more fluid transitions
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const fabricVariants = {
+  hidden: (index: number) => ({
+    opacity: 0,
+    y: 100,
+    scale: 0.8,
+    rotateY: index < 2 ? -15 : index > 2 ? 15 : 0,
+  }),
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    rotateY: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15,
+      delay: Math.abs(index - 2) * 0.1, // Center image first
+    },
+  }),
+  exit: {
+    opacity: 0,
+    y: -50,
+    scale: 0.9,
+    transition: { duration: 0.3 },
+  },
+  hover: {
+    y: -20,
+    scale: 1.05,
+    transition: { type: 'spring', stiffness: 300 },
+  },
+};
+
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   // Auto-advance slides
   useEffect(() => {
+    if (!isAutoPlaying) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroFabrics.length);
-    }, 6000);
+    }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isAutoPlaying]);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroFabrics.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroFabrics.length) % heroFabrics.length);
+  const nextSlide = () => {
+    setIsAutoPlaying(false);
+    setCurrentSlide((prev) => (prev + 1) % heroFabrics.length);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const prevSlide = () => {
+    setIsAutoPlaying(false);
+    setCurrentSlide((prev) => (prev - 1 + heroFabrics.length) % heroFabrics.length);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
 
   const currentFabric = heroFabrics[currentSlide];
 
-  return (
-    <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
-      {/* Gradient Background - Purple to Deep Blue like Vlisco */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900 via-indigo-900 to-slate-900" />
+  // Responsive image sizes and heights
+  const getImageStyles = (index: number) => {
+    const baseHeights = {
+      mobile: ['h-[140px]', 'h-[170px]', 'h-[200px]', 'h-[170px]', 'h-[140px]'],
+      tablet: ['h-[200px]', 'h-[260px]', 'h-[300px]', 'h-[260px]', 'h-[200px]'],
+      desktop: ['h-[280px]', 'h-[360px]', 'h-[420px]', 'h-[360px]', 'h-[280px]'],
+    };
+    return {
+      mobile: baseHeights.mobile[index],
+      tablet: baseHeights.tablet[index],
+      desktop: baseHeights.desktop[index],
+    };
+  };
 
-      {/* Stars overlay */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-10 left-[10%] w-1 h-1 bg-white rounded-full animate-pulse" />
-        <div className="absolute top-20 left-[25%] w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute top-16 left-[40%] w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-8 left-[55%] w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
-        <div className="absolute top-24 left-[70%] w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.7s' }} />
-        <div className="absolute top-12 left-[85%] w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1.2s' }} />
-        <div className="absolute top-32 left-[15%] w-0.5 h-0.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.9s' }} />
-        <div className="absolute top-28 left-[60%] w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+  return (
+    <section className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-[90vh] min-h-[400px] overflow-hidden">
+      {/* Animated Gradient Background */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          background: [
+            'linear-gradient(180deg, #581c87 0%, #312e81 50%, #0f172a 100%)',
+            'linear-gradient(180deg, #4c1d95 0%, #1e3a8a 50%, #0f172a 100%)',
+            'linear-gradient(180deg, #581c87 0%, #312e81 50%, #0f172a 100%)',
+          ],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      />
+
+      {/* Animated Stars */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white"
+            style={{
+              width: Math.random() * 3 + 1,
+              height: Math.random() * 3 + 1,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 40}%`,
+            }}
+            animate={{
+              opacity: [0.2, 1, 0.2],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 2 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
       </div>
 
+      {/* Animated Glow Effects */}
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 rounded-full bg-purple-500/20 blur-[100px]"
+        animate={{
+          x: [0, 50, 0],
+          y: [0, 30, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 rounded-full bg-blue-500/20 blur-[100px]"
+        animate={{
+          x: [0, -50, 0],
+          y: [0, -30, 0],
+          scale: [1.2, 1, 1.2],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+
       {/* Reflective floor gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-20 md:h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-      {/* Horizontal reflection line */}
-      <div className="absolute bottom-24 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      {/* Horizontal reflection line with shimmer */}
+      <motion.div
+        className="absolute bottom-16 md:bottom-24 left-0 right-0 h-px"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+        }}
+        animate={{
+          opacity: [0.3, 0.6, 0.3],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+        }}
+      />
 
-      {/* Fabric Images - Centered Row like Vlisco */}
-      <div className="absolute inset-0 flex items-center justify-center pt-16">
+      {/* Fabric Images */}
+      <div className="absolute inset-0 flex items-center justify-center pt-8 md:pt-16">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="flex items-end justify-center gap-2 md:gap-4 px-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex items-end justify-center gap-1 sm:gap-2 md:gap-4 px-2 sm:px-4"
           >
             {currentFabric.images.map((image, index) => {
-              // Create varying heights for dramatic effect
-              const heights = ['h-[280px]', 'h-[340px]', 'h-[380px]', 'h-[340px]', 'h-[280px]'];
-              const delays = [0.1, 0.2, 0, 0.2, 0.1];
+              const styles = getImageStyles(index);
 
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: delays[index], duration: 0.6 }}
-                  className={`relative ${heights[index]} w-[120px] md:w-[160px] lg:w-[180px] rounded-t-full overflow-hidden`}
+                  custom={index}
+                  variants={fabricVariants}
+                  whileHover="hover"
+                  className={`relative cursor-pointer overflow-hidden rounded-t-full
+                    ${styles.mobile} sm:${styles.tablet} lg:${styles.desktop}
+                    w-[60px] sm:w-[100px] md:w-[140px] lg:w-[180px]`}
                   style={{
-                    boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)',
+                    boxShadow: '0 0 40px rgba(139, 92, 246, 0.4), 0 0 80px rgba(139, 92, 246, 0.2)',
                   }}
                 >
                   <img
@@ -116,8 +259,20 @@ const HeroSection = () => {
                     loading="lazy"
                     className="w-full h-full object-cover"
                   />
+                  {/* Animated shimmer overlay */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '200%' }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3,
+                      delay: index * 0.2,
+                    }}
+                  />
                   {/* Gradient overlay for depth */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-white/10" />
                 </motion.div>
               );
             })}
@@ -125,15 +280,15 @@ const HeroSection = () => {
         </AnimatePresence>
       </div>
 
-      {/* Reflection below images */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 overflow-hidden opacity-30">
-        <div className="flex items-start justify-center gap-2 md:gap-4 px-4 transform scale-y-[-1] blur-sm">
+      {/* Reflection below images - Hidden on mobile */}
+      <div className="hidden sm:block absolute bottom-0 left-0 right-0 h-16 md:h-24 overflow-hidden opacity-20">
+        <div className="flex items-start justify-center gap-2 md:gap-4 px-4 transform scale-y-[-1] blur-[2px]">
           {currentFabric.images.map((image, index) => {
-            const heights = ['h-[80px]', 'h-[100px]', 'h-[120px]', 'h-[100px]', 'h-[80px]'];
+            const heights = ['h-[50px]', 'h-[70px]', 'h-[90px]', 'h-[70px]', 'h-[50px]'];
             return (
               <div
                 key={index}
-                className={`${heights[index]} w-[120px] md:w-[160px] lg:w-[180px] rounded-t-full overflow-hidden`}
+                className={`${heights[index]} w-[80px] md:w-[140px] rounded-t-full overflow-hidden`}
               >
                 <img
                   src={image}
@@ -146,39 +301,47 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows - Larger touch targets on mobile */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors z-20"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all z-20"
+        aria-label="Previous slide"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 transition-colors z-20"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/20 active:scale-95 transition-all z-20"
+        aria-label="Next slide"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+      <div className="absolute bottom-24 sm:bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {heroFabrics.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all ${index === currentSlide
+            onClick={() => {
+              setIsAutoPlaying(false);
+              setCurrentSlide(index);
+              setTimeout(() => setIsAutoPlaying(true), 10000);
+            }}
+            className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
                 ? 'w-8 bg-white'
-                : 'bg-white/40 hover:bg-white/60'
+                : 'w-2 bg-white/40 hover:bg-white/60'
               }`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>
 
-      {/* CTA Buttons - Bottom Right like Vlisco */}
-      <div className="absolute bottom-8 right-8 flex gap-3 z-20">
+      {/* CTA Buttons - Responsive positioning */}
+      <div className="absolute bottom-4 sm:bottom-8 left-1/2 sm:left-auto sm:right-8 -translate-x-1/2 sm:translate-x-0 flex flex-col sm:flex-row gap-2 sm:gap-3 z-20 w-[90%] sm:w-auto">
         <Button
           asChild
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
+          size="lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base"
         >
           <Link to="/gallery">
             New Collection
@@ -186,8 +349,9 @@ const HeroSection = () => {
         </Button>
         <Button
           variant="outline"
+          size="lg"
           asChild
-          className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-6"
+          className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm text-sm sm:text-base"
         >
           <Link to="/gallery">
             Discover Lookbook
@@ -196,34 +360,57 @@ const HeroSection = () => {
         </Button>
       </div>
 
-      {/* Title Overlay - Center Bottom */}
+      {/* Title Overlay */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.5 }}
-          className="absolute bottom-36 left-1/2 -translate-x-1/2 text-center z-10"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{
+            type: 'spring',
+            stiffness: 200,
+            damping: 20,
+          }}
+          className="absolute bottom-32 sm:bottom-40 left-1/2 -translate-x-1/2 text-center z-10 w-full px-4"
         >
-          <h2 className="font-display text-white text-lg md:text-xl tracking-widest uppercase mb-1">
+          <motion.h2
+            className="font-display text-white text-base sm:text-lg md:text-xl tracking-widest uppercase mb-1"
+            animate={{ letterSpacing: ['0.1em', '0.2em', '0.1em'] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          >
             {currentFabric.title}
-          </h2>
-          <p className="text-white/70 text-sm">
+          </motion.h2>
+          <p className="text-white/70 text-xs sm:text-sm">
             {currentFabric.subtitle}
           </p>
         </motion.div>
       </AnimatePresence>
 
-      {/* Logo/Brand in top center */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
-        <h1 className="font-display text-white text-3xl md:text-4xl tracking-wider">
+      {/* Logo/Brand - Responsive sizing */}
+      <motion.div
+        className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 z-20 text-center"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <motion.h1
+          className="font-display text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wider"
+          animate={{
+            textShadow: [
+              '0 0 20px rgba(139, 92, 246, 0.5)',
+              '0 0 40px rgba(139, 92, 246, 0.8)',
+              '0 0 20px rgba(139, 92, 246, 0.5)',
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
           IKSO AFRIFABS
-        </h1>
-        <p className="text-white/60 text-xs text-center tracking-[0.3em] mt-1">
+        </motion.h1>
+        <p className="text-white/60 text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] mt-1">
           THE FABRIC OF US
         </p>
-      </div>
+      </motion.div>
     </section>
   );
 };
