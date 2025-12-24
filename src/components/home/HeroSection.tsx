@@ -72,7 +72,7 @@ const HeroSection = () => {
   const current = heroCollections[currentSlide];
 
   return (
-    <section className="relative h-[80vh] md:h-[90vh] min-h-[600px] mt-20 md:mt-24 overflow-hidden bg-[#0A0A0A]">
+    <section className="relative min-h-[90vh] md:h-[90vh] mt-20 md:mt-24 overflow-hidden bg-[#0A0A0A]">
       {/* Background Layers */}
       <div className="absolute inset-0 z-0">
         {/* Layer 1: Subtle Texture */}
@@ -90,11 +90,50 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black/40" />
       </div>
 
-      <div className="container mx-auto px-4 h-full relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-12 py-12">
+      <div className="container mx-auto px-4 h-full relative z-10 py-12 lg:py-0">
+        <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-8 lg:gap-12">
 
-          {/* Left Side: Content Box (Glassmorphic for visibility) */}
-          <div className="w-full lg:w-1/2 flex flex-col items-start text-left">
+          {/* TOP (Mobile) / RIGHT (Desktop): Fabric "Rolls" */}
+          <div className="w-full lg:w-1/2 order-1 lg:order-2 relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-full flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSlide}
+                className="flex items-start justify-center gap-2 md:gap-4 h-full pt-4 md:pt-12"
+              >
+                {current.images.map((img, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    exit={{ scaleY: 0, opacity: 0 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: idx * 0.1,
+                      ease: [0.16, 1, 0.3, 1]
+                    }}
+                    style={{ originY: 0 }}
+                    className={`relative w-[55px] sm:w-[80px] md:w-[100px] xl:w-[110px] overflow-hidden rounded-b-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]
+                      ${idx === 0 || idx === 4 ? 'hidden sm:block h-[200px] sm:h-[300px] md:h-[350px] mt-12' :
+                        idx === 1 || idx === 3 ? 'h-[250px] sm:h-[350px] md:h-[450px] mt-6' :
+                          'h-[300px] sm:h-[400px] md:h-[550px]'}`}
+                  >
+                    <img
+                      src={img}
+                      alt="Fabric Detail"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40" />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Dynamic Shadow floor */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+          </div>
+
+          {/* BOTTOM (Mobile) / LEFT (Desktop): Content Box */}
+          <div className="w-full lg:w-1/2 order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentSlide}
@@ -115,9 +154,9 @@ const HeroSection = () => {
                   </span>
                 </motion.div>
 
-                <h2 className="font-display text-4xl md:text-6xl xl:text-8xl text-white leading-[1.1] mb-8 tracking-tight">
+                <h2 className="font-display text-4xl md:text-6xl xl:text-8xl text-white leading-[1.1] mb-6 tracking-tight">
                   {current.title.split(' ').map((word, i) => (
-                    <span key={i} className="inline-block mr-3 last:mr-0">
+                    <span key={i} className="inline-block mr-2 md:mr-3 last:mr-0">
                       {word === 'Royalty' || word === 'Narratives' || word === 'Expressions' ? (
                         <span className="text-primary italic">{word}</span>
                       ) : word}
@@ -125,18 +164,18 @@ const HeroSection = () => {
                   ))}
                 </h2>
 
-                <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-12 max-w-md font-medium">
+                <p className="text-base md:text-xl text-white/70 leading-relaxed mb-8 md:mb-12 max-w-md font-medium mx-auto lg:mx-0">
                   {current.description}
                 </p>
 
-                <div className="flex flex-wrap gap-5">
-                  <Button asChild size="xl" className="group rounded-none bg-primary text-white hover:bg-white hover:text-black transition-all duration-500 px-10">
+                <div className="flex flex-wrap justify-center lg:justify-start gap-4 md:gap-5 mb-8 lg:mb-0">
+                  <Button asChild size="lg" className="group rounded-none bg-primary text-white hover:bg-white hover:text-black transition-all duration-500 px-8 md:px-10 h-12 md:h-14">
                     <Link to="/gallery">
                       Explore Gallery
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="xl" asChild className="rounded-none border-white/40 text-white hover:bg-white hover:text-black transition-all duration-500 px-10">
+                  <Button variant="outline" size="lg" asChild className="rounded-none border-white/40 text-white hover:bg-white hover:text-black transition-all duration-500 px-8 md:px-10 h-12 md:h-14">
                     <Link to="/gallery">
                       Lookbook
                     </Link>
@@ -146,7 +185,7 @@ const HeroSection = () => {
             </AnimatePresence>
 
             {/* Pagination Controls */}
-            <div className="flex items-center gap-6 mt-16">
+            <div className="flex items-center gap-6 mt-4 lg:mt-16">
               <div className="flex gap-2">
                 {heroCollections.map((_, i) => (
                   <button
@@ -177,56 +216,10 @@ const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Side: Fabric "Rolls" (Unfurling Animation) */}
-          <div className="w-full lg:w-1/2 relative h-[400px] md:h-full flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentSlide}
-                className="flex items-start justify-center gap-2 md:gap-4 h-full pt-12"
-              >
-                {current.images.map((img, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ scaleY: 0, opacity: 0 }}
-                    animate={{ scaleY: 1, opacity: 1 }}
-                    exit={{ scaleY: 0, opacity: 0 }}
-                    transition={{
-                      duration: 0.8,
-                      delay: idx * 0.1,
-                      ease: [0.16, 1, 0.3, 1] // Custom quint ease
-                    }}
-                    style={{ originY: 0 }}
-                    className={`relative w-[60px] md:w-[90px] xl:w-[110px] overflow-hidden rounded-b-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.5)]
-                      ${idx === 0 || idx === 4 ? 'hidden sm:block h-[250px] md:h-[350px] mt-12' :
-                        idx === 1 || idx === 3 ? 'h-[300px] md:h-[450px] mt-6' :
-                          'h-[350px] md:h-[550px]'}`}
-                  >
-                    <img
-                      src={img}
-                      alt="Fabric Detail"
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Fabric shine/weave depth */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40" />
-
-                    {/* Subtle mouse parallax hint */}
-                    <motion.div
-                      className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      whileHover={{ opacity: 1 }}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Dynamic Shadow floor */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black to-transparent pointer-events-none" />
-          </div>
-
         </div>
       </div>
 
-      {/* Side Brand Text (Rotated) */}
+      {/* Side Brand Text (Rotated) - Hidden on mobile */}
       <div className="absolute left-6 bottom-12 hidden xl:block pointer-events-none">
         <p className="text-[10px] font-bold text-white/20 uppercase tracking-[1em] transform -rotate-90 origin-left">
           Authentic African Heritage
