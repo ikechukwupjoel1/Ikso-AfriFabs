@@ -86,7 +86,7 @@ const Admin = () => {
             }
 
             try {
-                // Check if user is the super admin
+                // Check if user is the super admin by email
                 if (user.email === SUPER_ADMIN_EMAIL) {
                     setIsAdmin(true);
                     setAdminRole('super_admin');
@@ -94,11 +94,11 @@ const Admin = () => {
                     return;
                 }
 
-                // Check admin_users table
+                // Check admin_users table by email
                 const { data, error } = await supabase
                     .from('admin_users')
                     .select('role')
-                    .eq('user_id', user.id)
+                    .eq('email', user.email)
                     .single();
 
                 if (error && error.code !== 'PGRST116') {
@@ -193,21 +193,12 @@ const Admin = () => {
         }
 
         try {
-            // First, find the user by email
-            const { data: userData, error: userError } = await supabase
-                .from('auth.users')
-                .select('id')
-                .eq('email', newAdminEmail.toLowerCase())
-                .single();
-
-            // If we can't query auth.users directly, we'll just insert with the email
-            // The RLS policy will handle validation
+            // Insert admin by email only (no user_id needed)
             const { error } = await supabase
                 .from('admin_users')
                 .insert({
                     email: newAdminEmail.toLowerCase(),
                     role: newAdminRole,
-                    user_id: userData?.id || null,
                     created_by: user?.id,
                 });
 
