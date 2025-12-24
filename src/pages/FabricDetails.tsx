@@ -5,6 +5,8 @@ import { ArrowLeft, ShoppingCart, Heart, Check, Minus, Plus, MessageCircle } fro
 
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import FabricStory from '@/components/fabric/FabricStory';
+import SimilarProducts from '@/components/fabric/SimilarProducts';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -12,6 +14,7 @@ import { useFabrics } from '@/hooks/useFabrics';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { getSimilarFabrics } from '@/data/fabrics';
 import { cn } from '@/lib/utils';
 import { calculatePrice, formatPrice } from '@/lib/currency';
 
@@ -255,6 +258,17 @@ const FabricDetails = () => {
                             </div>
                         </motion.div>
                     </div>
+
+                    {/* Fabric Story Section */}
+                    {fabric.story && (
+                        <FabricStory story={fabric.story} collectionName={fabric.collection} />
+                    )}
+
+                    {/* Similar Products Section */}
+                    <SimilarProducts
+                        fabrics={getSimilarFabrics(fabric)}
+                        currency={currency}
+                    />
                 </div>
             </main>
 
