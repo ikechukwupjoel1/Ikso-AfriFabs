@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Currency } from '@/types/fabric';
 import { FabricDialog } from '@/components/admin/FabricDialog';
+import { CategoryManager } from '@/components/admin/CategoryManager';
 
 // Super admin email
 const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
@@ -260,7 +261,7 @@ const Admin = () => {
     };
 
     const handleDeleteFabric = async (fabricId: string, fabricName: string) => {
-        if (!confirm(`Are you sure you want to delete "${fabricName}"? This action cannot be undone.`)) {
+        if (!confirm(`Are you sure you want to delete "${fabricName}" ? This action cannot be undone.`)) {
             return;
         }
 
@@ -415,6 +416,12 @@ const Admin = () => {
                                     Fabrics
                                 </TabsTrigger>
                             )}
+                            {canManageProducts && (
+                                <TabsTrigger value="categories" className="gap-2">
+                                    <FolderTree className="w-4 h-4" />
+                                    Categories
+                                </TabsTrigger>
+                            )}
                             {canManageAdmins && (
                                 <TabsTrigger value="admins" className="gap-2">
                                     <Users className="w-4 h-4" />
@@ -470,7 +477,7 @@ const Admin = () => {
                                                                 {order.currency === 'NGN' ? '₦' : 'CFA'} {order.total_amount?.toLocaleString()}
                                                             </TableCell>
                                                             <TableCell>
-                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                                                <span className={`px - 2 py - 1 rounded - full text - xs font - medium ${getStatusColor(order.status)} `}>
                                                                     {order.status}
                                                                 </span>
                                                             </TableCell>
@@ -571,8 +578,8 @@ const Admin = () => {
                                                                 <TableCell>{fabric.collection}</TableCell>
                                                                 <TableCell>CFA {fabric.price?.toLocaleString()}</TableCell>
                                                                 <TableCell>
-                                                                    <span className={`px-2 py-1 rounded-full text-xs ${fabric.in_stock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                                        }`}>
+                                                                    <span className={`px - 2 py - 1 rounded - full text - xs ${fabric.in_stock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                                        } `}>
                                                                         {fabric.in_stock ? 'In Stock' : 'Out of Stock'}
                                                                     </span>
                                                                 </TableCell>
@@ -610,6 +617,13 @@ const Admin = () => {
                                         )}
                                     </CardContent>
                                 </Card>
+                            </TabsContent>
+                        )}
+
+                        {/* Categories Tab */}
+                        {canManageProducts && (
+                            <TabsContent value="categories">
+                                <CategoryManager />
                             </TabsContent>
                         )}
 
