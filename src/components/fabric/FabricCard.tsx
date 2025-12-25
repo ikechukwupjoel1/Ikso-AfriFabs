@@ -51,16 +51,26 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
       whileHover={{ y: -4 }}
     >
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         <Link to={`/fabric/${fabric.id}`}>
-          <motion.img
-            src={fabric.image}
-            alt={fabric.name}
-            loading="lazy"
-            className="w-full h-full object-cover"
-            animate={{ scale: isHovered ? 1.08 : 1 }}
-            transition={{ duration: 0.4 }}
-          />
+          {fabric.image ? (
+            <motion.img
+              src={fabric.image}
+              alt={fabric.name}
+              loading="lazy"
+              className="w-full h-full object-cover"
+              animate={{ scale: isHovered ? 1.08 : 1 }}
+              transition={{ duration: 0.4 }}
+              onError={(e) => {
+                // Hide broken image and show fallback
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+              <span className="text-muted-foreground text-sm">{fabric.name}</span>
+            </div>
+          )}
         </Link>
 
         {/* Overlay */}
