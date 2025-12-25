@@ -65,19 +65,13 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">We Serve</h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-medium">Nigeria</div>
-                  <div className="text-muted-foreground">Lagos, Abuja</div>
-                </div>
+              <li className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span className="font-medium">Nigeria</span>
               </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <div className="font-medium">Benin Republic</div>
-                  <div className="text-muted-foreground">Cotonou, Porto-Novo</div>
-                </div>
+              <li className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span className="font-medium">Benin Republic</span>
               </li>
             </ul>
           </div>
