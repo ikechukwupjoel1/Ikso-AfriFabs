@@ -65,6 +65,7 @@ export const FabricDialog = ({
     const isEdit = !!fabric;
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState<FabricCategory[]>([]);
+    const [autoConvert, setAutoConvert] = useState(true); // Toggle for auto-conversion
     const [formData, setFormData] = useState<FabricFormData>({
         name: '',
         brand: '',
@@ -244,16 +245,18 @@ export const FabricDialog = ({
         setFormData((prev) => {
             const updated = { ...prev, [field]: value };
 
-            // Auto-convert prices using live exchange rate
-            if (field === 'price_ngn' && value) {
-                const ngnPrice = parseFloat(value);
-                if (!isNaN(ngnPrice)) {
-                    updated.price_cfa = ngnToCfaSync(ngnPrice).toString();
-                }
-            } else if (field === 'price_cfa' && value) {
-                const cfaPrice = parseFloat(value);
-                if (!isNaN(cfaPrice)) {
-                    updated.price_ngn = cfaToNgnSync(cfaPrice).toString();
+            // Auto-convert prices using live exchange rate (only if enabled)
+            if (autoConvert) {
+                if (field === 'price_ngn' && value) {
+                    const ngnPrice = parseFloat(value);
+                    if (!isNaN(ngnPrice)) {
+                        updated.price_cfa = ngnToCfaSync(ngnPrice).toString();
+                    }
+                } else if (field === 'price_cfa' && value) {
+                    const cfaPrice = parseFloat(value);
+                    if (!isNaN(cfaPrice)) {
+                        updated.price_ngn = cfaToNgnSync(cfaPrice).toString();
+                    }
                 }
             }
 
@@ -350,47 +353,67 @@ export const FabricDialog = ({
                     </div>
 
                     {/* Pricing */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="price_ngn">
-                                Price (NGN) <span className="text-xs text-muted-foreground">(auto-converts)</span>
-                            </Label>
-                            <Input
-                                id="price_ngn"
-                                type="number"
-                                step="1"
-                                min="0"
-                                value={formData.price_ngn}
-                                onChange={(e) => handleChange('price_ngn', e.target.value)}
-                                placeholder="0.00"
-                            />
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-base font-medium">Pricing</Label>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="auto_convert"
+                                    checked={autoConvert}
+                                    onCheckedChange={setAutoConvert}
+                                />
+                                <Label htmlFor="auto_convert" className="text-sm cursor-pointer">
+                                    Auto-convert prices
+                                </Label>
+                            </div>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            {autoConvert
+                                ? 'Prices auto-convert using live exchange rate. Enter one price and the other calculates.'
+                                : 'Set different prices for each market (Nigeria & Benin) independently.'}
+                        </p>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="price_ngn">
+                                    Price (NGN) <span className="text-xs text-muted-foreground">{autoConvert ? '(linked)' : '(Nigeria)'}</span>
+                                </Label>
+                                <Input
+                                    id="price_ngn"
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    value={formData.price_ngn}
+                                    onChange={(e) => handleChange('price_ngn', e.target.value)}
+                                    placeholder="0"
+                                />
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="price_cfa">
-                                Price (CFA) <span className="text-xs text-muted-foreground">(auto-converts)</span>
-                            </Label>
-                            <Input
-                                id="price_cfa"
-                                type="number"
-                                step="1"
-                                min="0"
-                                value={formData.price_cfa}
-                                onChange={(e) => handleChange('price_cfa', e.target.value)}
-                                placeholder="0.00"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="price_cfa">
+                                    Price (CFA) <span className="text-xs text-muted-foreground">{autoConvert ? '(linked)' : '(Benin)'}</span>
+                                </Label>
+                                <Input
+                                    id="price_cfa"
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    value={formData.price_cfa}
+                                    onChange={(e) => handleChange('price_cfa', e.target.value)}
+                                    placeholder="0"
+                                />
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="yardage">Yardage</Label>
-                            <Input
-                                id="yardage"
-                                type="number"
-                                step="0.1"
-                                value={formData.yardage}
-                                onChange={(e) => handleChange('yardage', e.target.value)}
-                                placeholder="6"
-                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="yardage">Yardage</Label>
+                                <Input
+                                    id="yardage"
+                                    type="number"
+                                    step="0.1"
+                                    value={formData.yardage}
+                                    onChange={(e) => handleChange('yardage', e.target.value)}
+                                    placeholder="6"
+                                />
+                            </div>
                         </div>
                     </div>
 
