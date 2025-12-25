@@ -24,6 +24,9 @@ import { ImageUpload } from './ImageUpload';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+// Approximate exchange rate: 1 NGN ≈ 1.3 CFA
+const NGN_TO_CFA_RATE = 1.3;
+
 interface FabricCategory {
     id: string;
     name: string;
@@ -158,8 +161,8 @@ export const FabricDialog = ({
                 return;
             }
 
-            if (!formData.price_ngn || !formData.price_cfa) {
-                toast.error('Please enter both NGN and CFA prices');
+            if (!formData.price_ngn && !formData.price_cfa) {
+                toast.error('Please enter at least one price (NGN or CFA)');
                 setLoading(false);
                 return;
             }
@@ -183,8 +186,8 @@ export const FabricDialog = ({
                 category_id: formData.category_id,
                 collection: formData.collection || null,
                 description: formData.description || null,
-                price_ngn: parseFloat(formData.price_ngn),
-                price_cfa: parseFloat(formData.price_cfa),
+                price_ngn: formData.price_ngn ? parseFloat(formData.price_ngn) : (formData.price_cfa ? parseFloat(formData.price_cfa) / NGN_TO_CFA_RATE : 0),
+                price_cfa: formData.price_cfa ? parseFloat(formData.price_cfa) : (formData.price_ngn ? parseFloat(formData.price_ngn) * NGN_TO_CFA_RATE : 0),
                 yardage: parseFloat(formData.yardage),
                 stock_quantity: parseInt(formData.stock_quantity),
                 sku: formData.sku || null,
@@ -238,7 +241,24 @@ export const FabricDialog = ({
     };
 
     const handleChange = (field: keyof FabricFormData, value: any) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+        setFormData((prev) => {
+            const updated = { ...prev, [field]: value };
+
+            // Auto-convert prices
+            if (field === 'price_ngn' && value) {
+                const ngnPrice = parseFloat(value);
+                if (!isNaN(ngnPrice)) {
+                    updated.price_cfa = (ngnPrice * NGN_TO_CFA_RATE).toFixed(2);
+                }
+            } else if (field === 'price_cfa' && value) {
+                const cfaPrice = parseFloat(value);
+                if (!isNaN(cfaPrice)) {
+                    updated.price_ngn = (cfaPrice / NGN_TO_CFA_RATE).toFixed(2);
+                }
+            }
+
+            return updated;
+        });
     };
 
     return (
@@ -333,31 +353,31 @@ export const FabricDialog = ({
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="price_ngn">
-                                Price (NGN) <span className="text-destructive">*</span>
+                                Price (NGN) <span className="text-xs text-muted-foreground">(auto-converts)</span>
                             </Label>
                             <Input
                                 id="price_ngn"
                                 type="number"
-                                step="0.01"
+                                step="1"
+                                min="0"
                                 value={formData.price_ngn}
                                 onChange={(e) => handleChange('price_ngn', e.target.value)}
                                 placeholder="0.00"
-                                required
                             />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="price_cfa">
-                                Price (CFA) <span className="text-destructive">*</span>
+                                Price (CFA) <span className="text-xs text-muted-foreground">(auto-converts)</span>
                             </Label>
                             <Input
                                 id="price_cfa"
                                 type="number"
-                                step="0.01"
+                                step="1"
+                                min="0"
                                 value={formData.price_cfa}
                                 onChange={(e) => handleChange('price_cfa', e.target.value)}
                                 placeholder="0.00"
-                                required
                             />
                         </div>
 
