@@ -23,10 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { ImageUpload } from './ImageUpload';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-
-// Black market exchange rate: 1 CFA = 2500 NGN (Dec 2025)
-// So: 1 NGN = 0.0004 CFA
-const NGN_TO_CFA_RATE = 0.0004;
+import { getCfaToNgnRate, cfaToNgnSync, ngnToCfaSync } from '@/lib/exchangeRate';
 
 interface FabricCategory {
     id: string;
@@ -105,6 +102,8 @@ export const FabricDialog = ({
 
         if (open) {
             fetchCategories();
+            // Prefetch exchange rate for live conversion
+            getCfaToNgnRate();
         }
     }, [open]);
 
@@ -187,8 +186,8 @@ export const FabricDialog = ({
                 category_id: formData.category_id,
                 collection: formData.collection || null,
                 description: formData.description || null,
-                price_ngn: formData.price_ngn ? parseFloat(formData.price_ngn) : (formData.price_cfa ? parseFloat(formData.price_cfa) / NGN_TO_CFA_RATE : 0),
-                price_cfa: formData.price_cfa ? parseFloat(formData.price_cfa) : (formData.price_ngn ? parseFloat(formData.price_ngn) * NGN_TO_CFA_RATE : 0),
+                price_ngn: formData.price_ngn ? parseFloat(formData.price_ngn) : (formData.price_cfa ? cfaToNgnSync(parseFloat(formData.price_cfa)) : 0),
+                price_cfa: formData.price_cfa ? parseFloat(formData.price_cfa) : (formData.price_ngn ? ngnToCfaSync(parseFloat(formData.price_ngn)) : 0),
                 yardage: parseFloat(formData.yardage),
                 stock_quantity: parseInt(formData.stock_quantity),
                 sku: formData.sku || null,
@@ -245,16 +244,16 @@ export const FabricDialog = ({
         setFormData((prev) => {
             const updated = { ...prev, [field]: value };
 
-            // Auto-convert prices
+            // Auto-convert prices using live exchange rate
             if (field === 'price_ngn' && value) {
                 const ngnPrice = parseFloat(value);
                 if (!isNaN(ngnPrice)) {
-                    updated.price_cfa = (ngnPrice * NGN_TO_CFA_RATE).toFixed(2);
+                    updated.price_cfa = ngnToCfaSync(ngnPrice).toString();
                 }
             } else if (field === 'price_cfa' && value) {
                 const cfaPrice = parseFloat(value);
                 if (!isNaN(cfaPrice)) {
-                    updated.price_ngn = (cfaPrice / NGN_TO_CFA_RATE).toFixed(2);
+                    updated.price_ngn = cfaToNgnSync(cfaPrice).toString();
                 }
             }
 
