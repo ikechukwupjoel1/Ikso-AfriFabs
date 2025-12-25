@@ -24,8 +24,8 @@ import { ImageUpload } from './ImageUpload';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-// Approximate exchange rate: 1 NGN ≈ 1.3 CFA
-const NGN_TO_CFA_RATE = 1.3;
+// Black market exchange rate: 1 NGN ≈ 1.5 CFA
+const NGN_TO_CFA_RATE = 1.5;
 
 interface FabricCategory {
     id: string;
