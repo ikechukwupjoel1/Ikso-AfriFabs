@@ -2,74 +2,78 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
-
-// Featured fabric images for the unique Ikso AfriFabs experience
-const heroCollections = [
-  {
-    id: 1,
-    images: [
-      '/Cloth Gallery/Supreme VIP Satin (1).webp',
-      '/Cloth Gallery/Kente Gold (1).webp',
-      '/Cloth Gallery/Super Gandaho (1).webp',
-      '/Cloth Gallery/AK Gold (1).webp',
-      '/Cloth Gallery/Cihgany (1).webp',
-    ],
-    title: 'The Fabric of Royalty',
-    description: 'Discover premium textiles that define elegance and heritage.',
-    tag: 'New Collection',
-  },
-  {
-    id: 2,
-    images: [
-      '/Cloth Gallery/Top Hollandais (1).webp',
-      '/Cloth Gallery/Super Mwunva (1).webp',
-      '/Cloth Gallery/Antiquity Wax (1).webp',
-      '/Cloth Gallery/Artist Wax (1).webp',
-      '/Cloth Gallery/Super Ruvuma (1).webp',
-    ],
-    title: 'Woven Narratives',
-    description: 'Every pattern tells a story. Every thread holds a memory.',
-    tag: 'Heritage Series',
-  },
-  {
-    id: 3,
-    images: [
-      '/Cloth Gallery/FABULOUS DYNASTY (1).webp',
-      '/Cloth Gallery/Egnonhou Chigan (1).webp',
-      '/Cloth Gallery/Super VIP Collection (1).webp',
-      '/Cloth Gallery/U & JB (1).webp',
-      '/Cloth Gallery/Velldam (1).webp',
-    ],
-    title: 'Vibrant Expressions',
-    description: 'Celebrate culture with bold prints and timeless craftsmanship.',
-    tag: 'Limited Edition',
-  },
-];
+import { useState, useEffect, useMemo } from 'react';
+import { useHeroCollections } from '@/hooks/useHeroCollections';
+import { useFabrics } from '@/hooks/useFabrics';
 
 const HeroSection = () => {
+  const { data: heroCollections = [] } = useHeroCollections();
+  const { data: allFabrics = [] } = useFabrics();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  // Build collections with actual fabric images
+  const collections = useMemo(() => {
+    return heroCollections.map(collection => {
+      const fabricImages = collection.fabric_ids
+        .map(id => {
+          const fabric = allFabrics.find(f => f.id === id);
+          return fabric?.image || fabric?.image_url;
+        })
+        .filter(Boolean);
+
+      return {
+        id: collection.id,
+        images: fabricImages.length === 5 ? fabricImages : [
+          '/Cloth Gallery/Supreme VIP Satin (1).webp',
+          '/Cloth Gallery/Kente Gold (1).webp',
+          '/Cloth Gallery/Super Gandaho (1).webp',
+          '/Cloth Gallery/AK Gold (1).webp',
+          '/Cloth Gallery/Cihgany (1).webp',
+        ], // Fallback if not enough fabrics selected
+        title: collection.title,
+        description: collection.description || '',
+        tag: collection.tag || 'Collection',
+      };
+    });
+  }, [heroCollections, allFabrics]);
+
+  // If no collections in database, use fallback
+  const displayCollections = collections.length > 0 ? collections : [
+    {
+      id: '1',
+      images: [
+        '/Cloth Gallery/Supreme VIP Satin (1).webp',
+        '/Cloth Gallery/Kente Gold (1).webp',
+        '/Cloth Gallery/Super Gandaho (1).webp',
+        '/Cloth Gallery/AK Gold (1).webp',
+        '/Cloth Gallery/Cihgany (1).webp',
+      ],
+      title: 'The Fabric of Royalty',
+      description: 'Discover premium textiles that define elegance and heritage.',
+      tag: 'New Collection',
+    },
+  ];
 
   useEffect(() => {
     if (!isAutoPlaying) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroCollections.length);
+      setCurrentSlide((prev) => (prev + 1) % displayCollections.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, displayCollections.length]);
 
   const nextSlide = () => {
     setIsAutoPlaying(false);
-    setCurrentSlide((prev) => (prev + 1) % heroCollections.length);
+    setCurrentSlide((prev) => (prev + 1) % displayCollections.length);
   };
 
   const prevSlide = () => {
     setIsAutoPlaying(false);
-    setCurrentSlide((prev) => (prev - 1 + heroCollections.length) % heroCollections.length);
+    setCurrentSlide((prev) => (prev - 1 + displayCollections.length) % displayCollections.length);
   };
 
-  const current = heroCollections[currentSlide];
+  const current = displayCollections[currentSlide];
 
   return (
     <section className="relative min-h-[90vh] md:h-[90vh] mt-20 md:mt-24 overflow-hidden bg-[#0A0A0A]">
@@ -187,7 +191,7 @@ const HeroSection = () => {
             {/* Pagination Controls */}
             <div className="flex items-center gap-6 mt-4 lg:mt-16">
               <div className="flex gap-2">
-                {heroCollections.map((_, i) => (
+                {displayCollections.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => {

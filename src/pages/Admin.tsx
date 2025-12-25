@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,7 @@ import Footer from '@/components/layout/Footer';
 import { Currency } from '@/types/fabric';
 import { FabricDialog } from '@/components/admin/FabricDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
+import { HeroManager } from '@/components/admin/HeroManager';
 import { fabrics as localFabrics } from '@/data/fabrics';
 
 // Super admin email
@@ -438,6 +439,12 @@ const Admin = () => {
                                     Categories
                                 </TabsTrigger>
                             )}
+                            {canManageProducts && (
+                                <TabsTrigger value="hero" className="gap-2">
+                                    <Sparkles className="w-4 h-4" />
+                                    Hero Sections
+                                </TabsTrigger>
+                            )}
                             {canManageAdmins && (
                                 <TabsTrigger value="admins" className="gap-2">
                                     <Users className="w-4 h-4" />
@@ -671,6 +678,13 @@ const Admin = () => {
                         {canManageProducts && (
                             <TabsContent value="categories">
                                 <CategoryManager />
+                            </TabsContent>
+                        )}
+
+                        {/* Hero Sections Tab */}
+                        {canManageProducts && (
+                            <TabsContent value="hero">
+                                <HeroManager />
                             </TabsContent>
                         )}
 

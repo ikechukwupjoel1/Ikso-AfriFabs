@@ -12,7 +12,11 @@ interface FeaturedFabricsProps {
 
 const FeaturedFabrics = ({ currency }: FeaturedFabricsProps) => {
   const { data: fabrics = [] } = useFabrics();
-  const featuredFabrics = fabrics.slice(0, 4);
+
+  // Show only featured fabrics that are in stock
+  const featuredFabrics = fabrics
+    .filter(fabric => fabric.featured && fabric.inStock)
+    .slice(0, 4);
 
   return (
     <section className="py-20 bg-background">
