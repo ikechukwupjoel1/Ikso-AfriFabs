@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -732,6 +732,24 @@ const Admin = () => {
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <div className="flex gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            title="Duplicate fabric"
+                                                                            onClick={() => {
+                                                                                // Create duplicate with modified name
+                                                                                const duplicateFabric = {
+                                                                                    ...fabric,
+                                                                                    id: undefined,
+                                                                                    name: `${fabric.name} (Copy)`,
+                                                                                    sku: '',
+                                                                                };
+                                                                                setSelectedFabric(duplicateFabric);
+                                                                                setShowFabricDialog(true);
+                                                                            }}
+                                                                        >
+                                                                            <Copy className="w-4 h-4" />
+                                                                        </Button>
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="icon"

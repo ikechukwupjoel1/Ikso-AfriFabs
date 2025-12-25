@@ -14,7 +14,6 @@ import { useFabrics } from '@/hooks/useFabrics';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
-import { getSimilarFabrics } from '@/data/fabrics';
 import { cn } from '@/lib/utils';
 import { calculatePrice, formatPrice } from '@/lib/currency';
 
@@ -266,7 +265,11 @@ const FabricDetails = () => {
 
                     {/* Similar Products Section */}
                     <SimilarProducts
-                        fabrics={getSimilarFabrics(fabric)}
+                        fabrics={fabrics.filter(f =>
+                            f.category === fabric.category &&
+                            f.id !== fabric.id &&
+                            f.inStock
+                        ).slice(0, 4)}
                         currency={currency}
                     />
                 </div>
