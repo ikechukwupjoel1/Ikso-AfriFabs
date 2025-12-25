@@ -1,20 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Currency } from '@/types/fabric';
+import { detectCurrency, detectCurrencySync } from '@/lib/geolocation';
+
+const CURRENCY_PREFERENCE_KEY = 'user_currency_preference';
 
 export const useCurrency = () => {
-  const [currency, setCurrency] = useState<Currency>('NGN');
+  // Start with cached preference or sync detection
+  const [currency, setCurrency] = useState<Currency>(() => {
+    // Check if user has a manual preference saved
+    const saved = localStorage.getItem(CURRENCY_PREFERENCE_KEY);
+    if (saved === 'NGN' || saved === 'CFA') {
+      return saved;
+    }
+    // Use sync detection (from geo cache if available)
+    return detectCurrencySync();
+  });
+  const [detected, setDetected] = useState(false);
 
   useEffect(() => {
-    // Simple detection based on timezone or could use geolocation API
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (timezone.includes('Porto-Novo') || timezone.includes('Cotonou')) {
-      setCurrency('CFA');
+    // Only auto-detect if user hasn't set a manual preference
+    const savedPreference = localStorage.getItem(CURRENCY_PREFERENCE_KEY);
+    if (savedPreference) {
+      setDetected(true);
+      return;
     }
+
+    // Detect currency based on IP location
+    detectCurrency().then((detectedCurrency) => {
+      setCurrency(detectedCurrency);
+      setDetected(true);
+    });
   }, []);
 
   const toggleCurrency = () => {
-    setCurrency(prev => prev === 'NGN' ? 'CFA' : 'NGN');
+    setCurrency((prev) => {
+      const newCurrency = prev === 'NGN' ? 'CFA' : 'NGN';
+      // Save manual preference
+      localStorage.setItem(CURRENCY_PREFERENCE_KEY, newCurrency);
+      return newCurrency;
+    });
   };
 
-  return { currency, setCurrency, toggleCurrency };
+  return { currency, setCurrency, toggleCurrency, detected };
 };
