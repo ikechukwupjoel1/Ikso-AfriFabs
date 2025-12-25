@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { GripVertical, Edit2, Trash2, Plus, Save, X } from 'lucide-react';
+import { GripVertical, Edit2, Trash2, Plus, Save, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +46,7 @@ export const CategoryManager = () => {
     const [loading, setLoading] = useState(true);
     const [showDialog, setShowDialog] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
     const [formData, setFormData] = useState<CategoryFormData>({
         name: '',
         slug: '',
@@ -215,6 +216,72 @@ export const CategoryManager = () => {
         }
     };
 
+    const toggleSelectAll = () => {
+        if (selectedCategories.size === categories.length) {
+            setSelectedCategories(new Set());
+        } else {
+            setSelectedCategories(new Set(categories.map(c => c.id)));
+        }
+    };
+
+    const toggleSelectCategory = (id: string) => {
+        const newSelected = new Set(selectedCategories);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedCategories(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedCategories.size === 0) return;
+
+        if (!confirm(`Are you sure you want to delete ${selectedCategories.size} categories? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            for (const id of selectedCategories) {
+                const { error } = await supabase
+                    .from('fabric_categories')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+            }
+
+            toast.success(`${selectedCategories.size} categories deleted successfully`);
+            setSelectedCategories(new Set());
+            fetchCategories();
+        } catch (err: any) {
+            console.error('Bulk delete error:', err);
+            toast.error(err.message || 'Failed to delete categories');
+        }
+    };
+
+    const handleBulkToggleActive = async (active: boolean) => {
+        if (selectedCategories.size === 0) return;
+
+        try {
+            for (const id of selectedCategories) {
+                const { error } = await supabase
+                    .from('fabric_categories')
+                    .update({ is_active: active, updated_at: new Date().toISOString() })
+                    .eq('id', id);
+
+                if (error) throw error;
+            }
+
+            toast.success(`${selectedCategories.size} categories ${active ? 'activated' : 'deactivated'}`);
+            setSelectedCategories(new Set());
+            fetchCategories();
+        } catch (err: any) {
+            console.error('Bulk toggle error:', err);
+            toast.error(err.message || 'Failed to update categories');
+        }
+    };
+
     const handleReorder = async (categoryId: string, direction: 'up' | 'down') => {
         const currentIndex = categories.findIndex((c) => c.id === categoryId);
         if (currentIndex === -1) return;
@@ -274,9 +341,51 @@ export const CategoryManager = () => {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    {/* Bulk Actions Toolbar */}
+                    {selectedCategories.size > 0 && (
+                        <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between">
+                            <span className="text-sm font-medium">
+                                {selectedCategories.size} selected
+                            </span>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleBulkToggleActive(true)}
+                                >
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Activate
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleBulkToggleActive(false)}
+                                >
+                                    <X className="w-4 h-4 mr-2" />
+                                    Deactivate
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={handleBulkDelete}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-12">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedCategories.size === categories.length && categories.length > 0}
+                                        onChange={toggleSelectAll}
+                                        className="cursor-pointer"
+                                    />
+                                </TableHead>
                                 <TableHead className="w-12">Order</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
@@ -288,6 +397,14 @@ export const CategoryManager = () => {
                         <TableBody>
                             {categories.map((category, index) => (
                                 <TableRow key={category.id}>
+                                    <TableCell>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedCategories.has(category.id)}
+                                            onChange={() => toggleSelectCategory(category.id)}
+                                            className="cursor-pointer"
+                                        />
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
                                             <Button

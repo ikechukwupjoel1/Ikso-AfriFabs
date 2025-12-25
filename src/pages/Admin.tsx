@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +82,7 @@ const Admin = () => {
     const [newAdminRole, setNewAdminRole] = useState('viewer');
     const [showFabricDialog, setShowFabricDialog] = useState(false);
     const [selectedFabric, setSelectedFabric] = useState<any>(null);
+    const [selectedFabrics, setSelectedFabrics] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
 
@@ -290,6 +291,73 @@ const Admin = () => {
         } catch (err: any) {
             console.error('Error deleting fabric:', err);
             toast.error(err.message || 'Failed to delete fabric');
+        }
+    };
+
+    const toggleSelectAllFabrics = () => {
+        const filtered = fabrics.filter(f => f.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+        if (selectedFabrics.size === filtered.length) {
+            setSelectedFabrics(new Set());
+        } else {
+            setSelectedFabrics(new Set(filtered.map(f => f.id)));
+        }
+    };
+
+    const toggleSelectFabric = (id: string) => {
+        const newSelected = new Set(selectedFabrics);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedFabrics(newSelected);
+    };
+
+    const handleBulkDeleteFabrics = async () => {
+        if (selectedFabrics.size === 0) return;
+
+        if (!confirm(`Are you sure you want to delete ${selectedFabrics.size} fabrics? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            for (const id of selectedFabrics) {
+                const { error } = await supabase
+                    .from('fabrics')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+            }
+
+            toast.success(`${selectedFabrics.size} fabrics deleted successfully`);
+            setSelectedFabrics(new Set());
+            fetchFabrics();
+        } catch (err: any) {
+            console.error('Bulk delete error:', err);
+            toast.error(err.message || 'Failed to delete fabrics');
+        }
+    };
+
+    const handleBulkUpdateStock = async (inStock: boolean) => {
+        if (selectedFabrics.size === 0) return;
+
+        try {
+            for (const id of selectedFabrics) {
+                const { error } = await supabase
+                    .from('fabrics')
+                    .update({ in_stock: inStock, updated_at: new Date().toISOString() })
+                    .eq('id', id);
+
+                if (error) throw error;
+            }
+
+            toast.success(`${selectedFabrics.size} fabrics marked as ${inStock ? 'in stock' : 'out of stock'}`);
+            setSelectedFabrics(new Set());
+            fetchFabrics();
+        } catch (err: any) {
+            console.error('Bulk stock update error:', err);
+            toast.error(err.message || 'Failed to update stock status');
         }
     };
 
@@ -573,6 +641,40 @@ const Admin = () => {
                                         </div>
                                     </CardHeader>
                                     <CardContent>
+                                        {/* Bulk Actions Toolbar */}
+                                        {selectedFabrics.size > 0 && (
+                                            <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between">
+                                                <span className="text-sm font-medium">
+                                                    {selectedFabrics.size} selected
+                                                </span>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleBulkUpdateStock(true)}
+                                                    >
+                                                        <Check className="w-4 h-4 mr-2" />
+                                                        Mark In Stock
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => handleBulkUpdateStock(false)}
+                                                    >
+                                                        <X className="w-4 h-4 mr-2" />
+                                                        Mark Out of Stock
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={handleBulkDeleteFabrics}
+                                                    >
+                                                        <Trash2 className="w-4 h-4 mr-2" />
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="mb-4 flex items-center justify-between">
                                             <p className="text-sm text-muted-foreground">
                                                 Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredFabrics.length)} of {filteredFabrics.length} fabrics
@@ -582,6 +684,14 @@ const Admin = () => {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
+                                                        <TableHead className="w-12">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedFabrics.size === filteredFabrics.length && filteredFabrics.length > 0}
+                                                                onChange={toggleSelectAllFabrics}
+                                                                className="cursor-pointer"
+                                                            />
+                                                        </TableHead>
                                                         <TableHead>Image</TableHead>
                                                         <TableHead>Name</TableHead>
                                                         <TableHead>Collection</TableHead>
@@ -596,6 +706,14 @@ const Admin = () => {
                                                         .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                                                         .map((fabric) => (
                                                             <TableRow key={fabric.id}>
+                                                                <TableCell>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedFabrics.has(fabric.id)}
+                                                                        onChange={() => toggleSelectFabric(fabric.id)}
+                                                                        className="cursor-pointer"
+                                                                    />
+                                                                </TableCell>
                                                                 <TableCell>
                                                                     <img
                                                                         src={fabric.image_url}
