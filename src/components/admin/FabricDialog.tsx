@@ -62,7 +62,8 @@ export const FabricDialog = ({
     fabric,
     onSuccess,
 }: FabricDialogProps) => {
-    const isEdit = !!fabric;
+    // isEdit only when fabric has valid id (not for duplicates where id is undefined)
+    const isEdit = !!fabric?.id;
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState<FabricCategory[]>([]);
     const [autoConvert, setAutoConvert] = useState(true); // Toggle for auto-conversion
