@@ -155,13 +155,16 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
                                 </div>
 
                                 <Button
-                                    variant="whatsapp"
+                                    variant="default"
                                     size="lg"
                                     className="w-full"
-                                    onClick={handleWhatsAppCheckout}
+                                    onClick={() => {
+                                        onClose();
+                                        window.location.href = '/checkout';
+                                    }}
                                 >
                                     <MessageCircle className="w-5 h-5 mr-2" />
-                                    Checkout via WhatsApp
+                                    Proceed to Checkout
                                 </Button>
 
                                 <div className="flex gap-2">

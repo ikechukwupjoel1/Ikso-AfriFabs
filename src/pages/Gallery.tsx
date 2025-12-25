@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal, Grid, LayoutList, Loader2 } from 'lucide-react';
 
@@ -8,26 +8,29 @@ import FabricCard from '@/components/fabric/FabricCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCurrency } from '@/hooks/useCurrency';
-import { useFabrics } from '@/hooks/useFabrics'; // Import the new hook
+import { useFabrics } from '@/hooks/useFabrics';
+import { useCategories } from '@/hooks/useCategories';
 import { cn } from '@/lib/utils';
-
-const categories = [
-  { id: 'all', label: 'All Fabrics' },
-  { id: 'ankara', label: 'Ankara' },
-  { id: 'kente', label: 'Kente' },
-  { id: 'adire', label: 'Adire' },
-  { id: 'aso-oke', label: 'Aso-Oke' },
-];
 
 const GalleryPage = () => {
   const { currency, toggleCurrency } = useCurrency();
   const { data: fabrics = [], isLoading, error } = useFabrics();
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(12); // Pagination: show 12 initially
 
   const ITEMS_PER_PAGE = 12;
+
+  // Build categories array from database data
+  const categories = useMemo(() => {
+    const dbCategories = categoriesData.map(cat => ({
+      id: cat.slug,
+      label: cat.name,
+    }));
+    return [{ id: 'all', label: 'All Fabrics' }, ...dbCategories];
+  }, [categoriesData]);
 
   const filteredFabrics = fabrics.filter(fabric => {
     const matchesSearch = fabric.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -145,10 +148,10 @@ const GalleryPage = () => {
           </motion.div>
 
           {/* Content Area */}
-          {isLoading ? (
+          {isLoading || categoriesLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Loading fabrics...</p>
+              <p className="text-muted-foreground">Loading {isLoading ? 'fabrics' : 'categories'}...</p>
             </div>
           ) : error ? (
             <div className="text-center py-20 text-red-500">
