@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import { useFabrics } from '@/hooks/useFabrics';
+import { useMemo } from 'react';
 
 const CategoryShowcase = () => {
     const { data: categories = [], isLoading: categoriesLoading } = useCategories();
@@ -10,13 +11,23 @@ const CategoryShowcase = () => {
 
     const isLoading = categoriesLoading || fabricsLoading;
 
-    // Get a sample image from each category's fabrics
-    const getCategoryImage = (categorySlug: string): string | null => {
-        const categoryFabric = fabrics.find(
-            f => f.category === categorySlug && f.image
-        );
-        return categoryFabric?.image || null;
-    };
+    // Get a random image from each category's fabrics (changes on each render)
+    const categoryImages = useMemo(() => {
+        const images: Record<string, string | null> = {};
+        categories.forEach(category => {
+            const categoryFabrics = fabrics.filter(
+                f => f.category === category.slug && f.image
+            );
+            if (categoryFabrics.length > 0) {
+                // Pick a random fabric from the category
+                const randomIndex = Math.floor(Math.random() * categoryFabrics.length);
+                images[category.slug] = categoryFabrics[randomIndex].image;
+            } else {
+                images[category.slug] = null;
+            }
+        });
+        return images;
+    }, [categories, fabrics]);
 
     // Gradient colors for categories without images
     const gradientColors = [
@@ -63,7 +74,7 @@ const CategoryShowcase = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     {categories.map((category, index) => {
-                        const image = getCategoryImage(category.slug);
+                        const image = categoryImages[category.slug];
                         const gradient = gradientColors[index % gradientColors.length];
 
                         return (
