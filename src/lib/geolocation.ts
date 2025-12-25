@@ -56,14 +56,16 @@ export async function detectCountry(): Promise<{ country: string; countryCode: s
     }
 
     try {
-        // Using ip-api.com (free, no API key required)
-        const response = await fetch('http://ip-api.com/json/?fields=country,countryCode');
+        // Using ipapi.co (free, HTTPS, no API key required)
+        const response = await fetch('https://ipapi.co/json/', {
+            headers: { 'Accept': 'application/json' }
+        });
 
         if (response.ok) {
             const data = await response.json();
-            if (data.countryCode) {
-                setCachedCountry(data.country, data.countryCode);
-                return { country: data.country, countryCode: data.countryCode };
+            if (data.country_code) {
+                setCachedCountry(data.country_name || data.country, data.country_code);
+                return { country: data.country_name || data.country, countryCode: data.country_code };
             }
         }
     } catch (error) {

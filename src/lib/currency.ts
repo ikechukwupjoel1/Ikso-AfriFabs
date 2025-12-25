@@ -13,10 +13,10 @@ export function calculatePrice(
     exchangeRate: number
 ): number {
     if (currency === 'CFA') {
-        return priceCFA;
+        return priceCFA || 0;
     }
     // Convert CFA to NGN using live exchange rate
-    return Math.round(priceCFA * exchangeRate);
+    return Math.round((priceCFA || 0) * (exchangeRate || 1));
 }
 
 /**
@@ -25,9 +25,10 @@ export function calculatePrice(
  * @param currency Currency type
  * @returns Formatted price string
  */
-export function formatPrice(price: number, currency: Currency): string {
+export function formatPrice(price: number | undefined | null, currency: Currency): string {
+    const safePrice = price ?? 0;
     if (currency === 'NGN') {
-        return `₦${price.toLocaleString()}`;
+        return `₦${safePrice.toLocaleString()}`;
     }
-    return `${price.toLocaleString()} CFA`;
+    return `${safePrice.toLocaleString()} CFA`;
 }
