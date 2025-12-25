@@ -24,8 +24,9 @@ import { ImageUpload } from './ImageUpload';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-// Black market exchange rate: 1 NGN ≈ 1.5 CFA
-const NGN_TO_CFA_RATE = 1.5;
+// Black market exchange rate: 1 CFA = 2500 NGN (Dec 2025)
+// So: 1 NGN = 0.0004 CFA
+const NGN_TO_CFA_RATE = 0.0004;
 
 interface FabricCategory {
     id: string;
