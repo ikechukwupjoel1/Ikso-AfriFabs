@@ -19,6 +19,8 @@ interface FabricCardProps {
 const FabricCard = ({ fabric, currency }: FabricCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const { addToCart, isInCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -53,17 +55,31 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         <Link to={`/fabric/${fabric.id}`}>
-          {fabric.image ? (
+          {/* Skeleton Placeholder */}
+          {!imageLoaded && !imageError && fabric.image && (
+            <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse">
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+              </div>
+            </div>
+          )}
+
+          {fabric.image && !imageError ? (
             <motion.img
               src={fabric.image}
               alt={fabric.name}
               loading="lazy"
-              className="w-full h-full object-cover"
+              decoding="async"
+              className={cn(
+                "w-full h-full object-cover transition-opacity duration-300",
+                imageLoaded ? "opacity-100" : "opacity-0"
+              )}
               animate={{ scale: isHovered ? 1.08 : 1 }}
               transition={{ duration: 0.4 }}
-              onError={(e) => {
-                // Hide broken image and show fallback
-                (e.target as HTMLImageElement).style.display = 'none';
+              onLoad={() => setImageLoaded(true)}
+              onError={() => {
+                setImageError(true);
+                setImageLoaded(true);
               }}
             />
           ) : (
