@@ -212,13 +212,26 @@ const Admin = () => {
 
     const fetchOrders = async () => {
         try {
-            const { data, error } = await supabase
+            // Fetch orders
+            const { data: ordersData, error: ordersError } = await supabase
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setOrders(data || []);
+            if (ordersError) throw ordersError;
+
+            // Fetch order items
+            const { data: orderItemsData } = await supabase
+                .from('order_items')
+                .select('*');
+
+            // Merge order items into orders
+            const ordersWithItems = (ordersData || []).map(order => ({
+                ...order,
+                order_items: (orderItemsData || []).filter(item => item.order_id === order.id)
+            }));
+
+            setOrders(ordersWithItems);
         } catch (err) {
             console.error('Error fetching orders:', err);
         }
@@ -603,18 +616,32 @@ const Admin = () => {
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell>
-                                                                <div className="max-w-[200px] text-xs">
-                                                                    {order.notes ? (
-                                                                        <span className="text-muted-foreground">{order.notes}</span>
-                                                                    ) : order.items?.length > 0 ? (
-                                                                        order.items.map((item: any, idx: number) => (
-                                                                            <div key={idx}>
-                                                                                <span className="font-medium">{item.fabric_name || 'Unknown'}</span>
-                                                                                <span className="text-muted-foreground"> x{item.pieces} pcs</span>
-                                                                            </div>
-                                                                        ))
+                                                                <div className="max-w-[250px]">
+                                                                    {/* Show order_items with images if available */}
+                                                                    {order.order_items?.length > 0 ? (
+                                                                        <div className="flex flex-col gap-2">
+                                                                            {order.order_items.map((item: any, idx: number) => (
+                                                                                <div key={idx} className="flex items-center gap-2">
+                                                                                    {item.fabric_image && (
+                                                                                        <img
+                                                                                            src={item.fabric_image}
+                                                                                            alt={item.fabric_name}
+                                                                                            className="w-10 h-10 rounded object-cover border"
+                                                                                        />
+                                                                                    )}
+                                                                                    <div className="text-xs">
+                                                                                        <p className="font-medium">{item.fabric_name || 'Unknown'}</p>
+                                                                                        <p className="text-muted-foreground">
+                                                                                            {item.quantity || 1} pcs ({item.yardage || (item.quantity || 1) * 6} yards)
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : order.notes ? (
+                                                                        <span className="text-xs text-muted-foreground">{order.notes}</span>
                                                                     ) : (
-                                                                        <span className="text-muted-foreground">No details</span>
+                                                                        <span className="text-xs text-muted-foreground">No details</span>
                                                                     )}
                                                                 </div>
                                                             </TableCell>

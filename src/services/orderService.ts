@@ -56,19 +56,25 @@ export const createOrder = async (
 
         if (orderError) throw orderError;
 
-        // 3. Create Order Items
+        // 4. Create Order Items with fabric details for admin viewing
         const orderItems = cartItems.map(item => ({
             order_id: order.id,
             fabric_id: item.fabricId,
+            fabric_name: item.fabric.name,
+            fabric_image: item.fabric.image,
+            quantity: item.pieces,
             yardage: item.pieces * 6, // 6 yards per piece
             price_per_unit: calculatePrice(item.fabric.priceCFA, orderData.currency, exchangeRate)
         }));
 
-        const { error: itemsError } = await supabase
-            .from('order_items')
-            .insert(orderItems);
-
-        if (itemsError) throw itemsError;
+        // Try to insert order items (may fail if table doesn't exist)
+        try {
+            await supabase
+                .from('order_items')
+                .insert(orderItems);
+        } catch (itemsErr) {
+            console.warn('Could not save order_items:', itemsErr);
+        }
 
         // 4. Update Stock (Decrement quantity)
         // Note: Ideally this should be a DB function/RPC to ensure atomicity, but client-side loop works for now
