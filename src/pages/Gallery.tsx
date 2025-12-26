@@ -1,25 +1,33 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Grid, LayoutList, Loader2 } from 'lucide-react';
+import { Search, Grid, LayoutList, Loader2, ArrowUpDown, Check } from 'lucide-react';
 
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FabricCard from '@/components/fabric/FabricCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCurrency } from '@/hooks/useCurrency';
 import { useFabrics } from '@/hooks/useFabrics';
 import { useCategories } from '@/hooks/useCategories';
+import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { calculatePrice } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+
+type SortOption = 'newest' | 'price-low' | 'price-high' | 'name';
 
 const GalleryPage = () => {
   const { currency, toggleCurrency } = useCurrency();
   const { data: fabrics = [], isLoading, error } = useFabrics();
   const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories();
+  const { rate } = useExchangeRate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [visibleCount, setVisibleCount] = useState(12); // Pagination: show 12 initially
+  const [visibleCount, setVisibleCount] = useState(12);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -32,15 +40,41 @@ const GalleryPage = () => {
     return [{ id: 'all', label: 'All Fabrics' }, ...dbCategories];
   }, [categoriesData]);
 
-  const filteredFabrics = fabrics.filter(fabric => {
-    const matchesSearch = fabric.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fabric.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fabric.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFabrics = useMemo(() => {
+    let result = fabrics.filter(fabric => {
+      const matchesSearch = fabric.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        fabric.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (fabric.tags && fabric.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
 
-    const matchesCategory = selectedCategory === 'all' || fabric.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'all' || fabric.category === selectedCategory;
+      const matchesStock = !showInStockOnly || fabric.inStock;
 
-    return matchesSearch && matchesCategory;
-  });
+      return matchesSearch && matchesCategory && matchesStock;
+    });
+
+    // Sort the results
+    switch (sortBy) {
+      case 'price-low':
+        result = result.sort((a, b) =>
+          calculatePrice(a.priceCFA, currency, rate) - calculatePrice(b.priceCFA, currency, rate)
+        );
+        break;
+      case 'price-high':
+        result = result.sort((a, b) =>
+          calculatePrice(b.priceCFA, currency, rate) - calculatePrice(a.priceCFA, currency, rate)
+        );
+        break;
+      case 'name':
+        result = result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'newest':
+      default:
+        // Already sorted by created_at desc from database
+        break;
+    }
+
+    return result;
+  }, [fabrics, searchQuery, selectedCategory, showInStockOnly, sortBy, currency, rate]);
 
   // Reset visible count when filters change
   const handleCategoryChange = (categoryId: string) => {
@@ -100,11 +134,32 @@ const GalleryPage = () => {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline">
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  Filters
+              <div className="flex gap-2 flex-wrap">
+                {/* Sort Dropdown */}
+                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                  <SelectTrigger className="w-[160px]">
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="name">Name: A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* In Stock Toggle */}
+                <Button
+                  variant={showInStockOnly ? "default" : "outline"}
+                  onClick={() => setShowInStockOnly(!showInStockOnly)}
+                  className="gap-2"
+                >
+                  {showInStockOnly && <Check className="w-4 h-4" />}
+                  In Stock Only
                 </Button>
+
+                {/* View Mode Toggle */}
                 <div className="flex border border-border rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
