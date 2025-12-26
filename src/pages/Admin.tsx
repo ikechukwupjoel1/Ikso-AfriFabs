@@ -154,6 +154,40 @@ const Admin = () => {
         }
     }, [isAdmin, adminRole]);
 
+    // Realtime subscription for new orders
+    useEffect(() => {
+        if (!isAdmin) return;
+
+        // Subscribe to orders table changes
+        const ordersSubscription = supabase
+            .channel('orders_changes')
+            .on('postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'orders' },
+                (payload) => {
+                    // Add new order to the list
+                    setOrders(prev => [payload.new as any, ...prev]);
+                    toast.success(`🔔 New order from ${(payload.new as any).customer_name || 'Customer'}!`, {
+                        duration: 5000,
+                    });
+                }
+            )
+            .on('postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'orders' },
+                (payload) => {
+                    // Update existing order
+                    setOrders(prev => prev.map(order =>
+                        order.id === (payload.new as any).id ? payload.new as any : order
+                    ));
+                }
+            )
+            .subscribe();
+
+        // Cleanup on unmount
+        return () => {
+            supabase.removeChannel(ordersSubscription);
+        };
+    }, [isAdmin]);
+
     const fetchFabrics = async () => {
         try {
             // Try to fetch from Supabase first
