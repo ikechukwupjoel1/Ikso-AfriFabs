@@ -28,16 +28,10 @@ export const createOrder = async (
             return sum + (price * item.pieces);
         }, 0);
 
-        // 2. Prepare items array for easy admin viewing
-        const itemsForOrder = cartItems.map(item => ({
-            fabric_id: item.fabricId,
-            fabric_name: item.fabric.name,
-            fabric_image: item.fabric.image,
-            pieces: item.pieces,
-            yards: item.pieces * 6,
-            price_per_piece: calculatePrice(item.fabric.priceCFA, orderData.currency, exchangeRate),
-            subtotal: calculatePrice(item.fabric.priceCFA, orderData.currency, exchangeRate) * item.pieces
-        }));
+        // 2. Prepare items summary for notes (since items JSONB column might not exist)
+        const itemsSummary = cartItems.map(item =>
+            `${item.fabric.name} x${item.pieces} pcs (${item.pieces * 6} yards)`
+        ).join(', ');
 
         // 3. Create Order Record
         const { data: order, error: orderError } = await supabase
@@ -54,9 +48,8 @@ export const createOrder = async (
                 delivery_method: orderData.delivery_method,
                 currency: orderData.currency,
                 total_amount: total,
-                items: itemsForOrder, // Store items in JSONB column
                 status: 'pending',
-                notes: 'Order placed via website checkout'
+                notes: `Items: ${itemsSummary}`
             })
             .select()
             .single();

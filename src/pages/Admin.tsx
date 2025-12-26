@@ -569,16 +569,18 @@ const Admin = () => {
                                                                 </div>
                                                             </TableCell>
                                                             <TableCell>
-                                                                <div className="flex flex-col gap-0.5">
-                                                                    {order.items?.length > 0 ? (
+                                                                <div className="max-w-[200px] text-xs">
+                                                                    {order.notes ? (
+                                                                        <span className="text-muted-foreground">{order.notes}</span>
+                                                                    ) : order.items?.length > 0 ? (
                                                                         order.items.map((item: any, idx: number) => (
-                                                                            <div key={idx} className="text-xs">
+                                                                            <div key={idx}>
                                                                                 <span className="font-medium">{item.fabric_name || 'Unknown'}</span>
                                                                                 <span className="text-muted-foreground"> x{item.pieces} pcs</span>
                                                                             </div>
                                                                         ))
                                                                     ) : (
-                                                                        <span className="text-muted-foreground text-xs">No items</span>
+                                                                        <span className="text-muted-foreground">No details</span>
                                                                     )}
                                                                 </div>
                                                             </TableCell>
