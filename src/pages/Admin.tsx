@@ -568,7 +568,20 @@ const Admin = () => {
                                                                     <p className="text-xs text-muted-foreground">{order.customer_email}</p>
                                                                 </div>
                                                             </TableCell>
-                                                            <TableCell>{order.items?.length || 0}</TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-col gap-0.5">
+                                                                    {order.items?.length > 0 ? (
+                                                                        order.items.map((item: any, idx: number) => (
+                                                                            <div key={idx} className="text-xs">
+                                                                                <span className="font-medium">{item.fabric_name || 'Unknown'}</span>
+                                                                                <span className="text-muted-foreground"> x{item.pieces} pcs</span>
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <span className="text-muted-foreground text-xs">No items</span>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
                                                             <TableCell className="font-medium">
                                                                 {order.currency === 'NGN' ? '₦' : 'CFA'} {order.total_amount?.toLocaleString()}
                                                             </TableCell>
