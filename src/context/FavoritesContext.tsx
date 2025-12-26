@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 
 interface FavoritesContextType {
     favorites: string[];
@@ -26,9 +26,21 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         return [];
     });
 
-    // Persist to localStorage
+    // Debounced localStorage write to prevent UI blocking
+    const saveTimeoutRef = useRef<NodeJS.Timeout>();
     useEffect(() => {
-        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        saveTimeoutRef.current = setTimeout(() => {
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+        }, 100);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
     }, [favorites]);
 
     const toggleFavorite = (fabricId: string) => {

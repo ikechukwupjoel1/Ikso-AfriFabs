@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { Fabric, Currency } from '@/types/fabric';
 import { calculatePrice } from '@/lib/currency';
 
@@ -43,9 +43,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return [];
     });
 
-    // Persist to localStorage
+    // Debounced localStorage write to prevent UI blocking
+    const saveTimeoutRef = useRef<NodeJS.Timeout>();
     useEffect(() => {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+        // Clear previous timeout
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+        // Debounce localStorage write by 100ms
+        saveTimeoutRef.current = setTimeout(() => {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+        }, 100);
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
     }, [items]);
 
     const addToCart = (fabric: Fabric, pieces: number = 1) => {
