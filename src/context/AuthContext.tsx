@@ -10,6 +10,7 @@ interface AuthContextType {
     signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
     resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+    isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             signIn,
             signOut,
             resetPassword,
+            isAuthenticated: !!user,
         }}>
             {children}
         </AuthContext.Provider>
