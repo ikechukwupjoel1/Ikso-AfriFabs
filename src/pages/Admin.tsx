@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,7 @@ import { Currency } from '@/types/fabric';
 import { FabricDialog } from '@/components/admin/FabricDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HeroManager } from '@/components/admin/HeroManager';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { fabrics as localFabrics } from '@/data/fabrics';
 
 // Super admin email
@@ -513,6 +514,10 @@ const Admin = () => {
                                     Hero Sections
                                 </TabsTrigger>
                             )}
+                            <TabsTrigger value="analytics" className="gap-2">
+                                <TrendingUp className="w-4 h-4" />
+                                Analytics
+                            </TabsTrigger>
                             {canManageAdmins && (
                                 <TabsTrigger value="admins" className="gap-2">
                                     <Users className="w-4 h-4" />
@@ -908,6 +913,11 @@ const Admin = () => {
                                 </Card>
                             </TabsContent>
                         )}
+
+                        {/* Analytics Tab */}
+                        <TabsContent value="analytics">
+                            <AnalyticsDashboard />
+                        </TabsContent>
                     </Tabs>
                 </div>
             </main>
