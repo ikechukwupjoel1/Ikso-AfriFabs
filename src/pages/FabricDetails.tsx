@@ -7,6 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FabricStory from '@/components/fabric/FabricStory';
 import SimilarProducts from '@/components/fabric/SimilarProducts';
+import ReviewSection from '@/components/fabric/ReviewSection';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCurrency } from '@/hooks/useCurrency';
@@ -272,6 +273,9 @@ const FabricDetails = () => {
                         ).slice(0, 4)}
                         currency={currency}
                     />
+
+                    {/* Customer Reviews Section */}
+                    <ReviewSection fabricId={fabric.id} />
                 </div>
             </main>
 
