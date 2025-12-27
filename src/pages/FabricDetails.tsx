@@ -240,15 +240,7 @@ const FabricDetails = () => {
                                     </Button>
                                 </div>
 
-                                <Button
-                                    size="lg"
-                                    variant="whatsapp"
-                                    className="w-full gap-2"
-                                    onClick={handleWhatsAppOrder}
-                                >
-                                    <MessageCircle className="w-5 h-5" />
-                                    Order via WhatsApp
-                                </Button>
+                                {/* WhatsApp direct order removed - all orders go through checkout for proper tracking */}
 
                                 <Link to={`/studio?fabric=${fabric.id}`}>
                                     <Button size="lg" variant="secondary" className="w-full">
