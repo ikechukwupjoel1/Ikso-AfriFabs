@@ -81,6 +81,7 @@ export const generateInvoice = (data: InvoiceData): void => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://iksoafrifabs.vercel.app/favicon.png">
     <title>Receipt #${data.orderId.substring(0, 8).toUpperCase()} - Ikso AfriFabs</title>
     <style>
         * {

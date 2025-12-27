@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp, Tag
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp, Tag, FileDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +50,7 @@ import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HeroManager } from '@/components/admin/HeroManager';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { fabrics as localFabrics } from '@/data/fabrics';
+import { generateInvoice } from '@/utils/invoiceGenerator';
 
 // Super admin email
 const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
@@ -427,6 +428,41 @@ const Admin = () => {
         }
     };
 
+    // Download receipt for admin
+    const handleDownloadReceipt = (order: any) => {
+        // Parse items from order_items or notes
+        let items: any[] = [];
+
+        if (order.order_items && order.order_items.length > 0) {
+            items = order.order_items.map((item: any) => ({
+                fabric_name: item.fabric_name || 'Fabric',
+                fabric_image: item.fabric_image,
+                quantity: item.quantity || 1,
+                unit_price: item.unit_price || (order.total_amount / (item.quantity || 1)),
+            }));
+        }
+
+        generateInvoice({
+            orderId: order.id,
+            orderDate: order.created_at,
+            customerName: order.customer_name || 'Customer',
+            customerEmail: order.customer_email || '',
+            customerPhone: order.customer_phone,
+            address: order.address,
+            city: order.city,
+            state: order.state,
+            country: order.country,
+            items: items,
+            subtotal: order.total_amount || 0,
+            discount: order.discount_amount,
+            discountCode: order.discount_code,
+            total: order.total_amount || 0,
+            currency: order.currency || 'NGN',
+            status: order.status || 'pending',
+            notes: order.notes,
+        });
+    };
+
     const handleDeleteFabric = async (fabricId: string, fabricName: string) => {
         if (!confirm(`Are you sure you want to delete "${fabricName}" ? This action cannot be undone.`)) {
             return;
@@ -713,6 +749,7 @@ const Admin = () => {
                                                         <TableHead>Status</TableHead>
                                                         <TableHead>Date</TableHead>
                                                         <TableHead>Actions</TableHead>
+                                                        <TableHead>Receipt</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -784,6 +821,21 @@ const Admin = () => {
                                                                         <SelectItem value="cancelled">Cancelled</SelectItem>
                                                                     </SelectContent>
                                                                 </Select>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {(order.status === 'confirmed' || order.status === 'delivered') ? (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => handleDownloadReceipt(order)}
+                                                                        className="gap-1"
+                                                                    >
+                                                                        <FileDown className="w-4 h-4" />
+                                                                        Receipt
+                                                                    </Button>
+                                                                ) : (
+                                                                    <span className="text-xs text-muted-foreground">-</span>
+                                                                )}
                                                             </TableCell>
                                                         </TableRow>
                                                     ))}
