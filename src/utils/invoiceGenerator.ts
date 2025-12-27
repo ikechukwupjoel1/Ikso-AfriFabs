@@ -33,7 +33,48 @@ const formatCurrency = (amount: number, currency: 'NGN' | 'CFA'): string => {
     return `${symbol}${amount.toLocaleString()}`;
 };
 
+// Parse items from notes field if items array is empty
+const parseItemsFromNotes = (notes: string, total: number): InvoiceItem[] => {
+    // Try to extract items from notes like "Items: Super VIP Collection x3 pcs (18 yards)"
+    const itemsMatch = notes.match(/Items?:\s*(.+?)(?:\n|$)/i);
+    if (itemsMatch) {
+        const itemText = itemsMatch[1];
+        // Parse "Name xQty pcs" pattern
+        const matches = itemText.match(/(.+?)\s*x(\d+)\s*pcs?/i);
+        if (matches) {
+            const quantity = parseInt(matches[2]) || 1;
+            return [{
+                fabric_name: matches[1].trim(),
+                quantity: quantity,
+                unit_price: total / quantity,
+            }];
+        }
+        // If no quantity pattern, just use the text as item name
+        return [{
+            fabric_name: itemText.trim(),
+            quantity: 1,
+            unit_price: total,
+        }];
+    }
+    return [];
+};
+
 export const generateInvoice = (data: InvoiceData): void => {
+    // If no items but have notes, try to parse items from notes
+    let displayItems = data.items;
+    if ((!displayItems || displayItems.length === 0) && data.notes) {
+        displayItems = parseItemsFromNotes(data.notes, data.total);
+    }
+
+    // If still no items, create a single item from total
+    if (!displayItems || displayItems.length === 0) {
+        displayItems = [{
+            fabric_name: 'Order Items',
+            quantity: 1,
+            unit_price: data.total,
+        }];
+    }
+
     const invoiceHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -63,6 +104,16 @@ export const generateInvoice = (data: InvoiceData): void => {
             margin-bottom: 40px;
             padding-bottom: 20px;
             border-bottom: 2px solid #d97706;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
         }
         .logo {
             font-size: 28px;
@@ -177,20 +228,11 @@ export const generateInvoice = (data: InvoiceData): void => {
             border-top: 1px solid #e5e7eb;
             text-align: center;
             font-size: 12px;
-            color: #999;
-        }
-        .notes {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 30px;
-            font-size: 14px;
-        }
-        .notes h4 {
-            font-size: 12px;
-            text-transform: uppercase;
             color: #666;
-            margin-bottom: 8px;
+        }
+        .whatsapp-link {
+            color: #25D366;
+            font-weight: 600;
         }
         @media print {
             body { padding: 20px; }
@@ -200,9 +242,12 @@ export const generateInvoice = (data: InvoiceData): void => {
 </head>
 <body>
     <div class="header">
-        <div>
-            <div class="logo">Ikso AfriFabs</div>
-            <div class="logo-sub">Premium African Fabrics</div>
+        <div class="logo-section">
+            <img src="https://iksoafrifabs.vercel.app/favicon.png" alt="Ikso AfriFabs" class="logo-img" onerror="this.style.display='none'">
+            <div>
+                <div class="logo">Ikso AfriFabs</div>
+                <div class="logo-sub">Premium African Fabrics</div>
+            </div>
         </div>
         <div class="invoice-title">
             <h1>INVOICE</h1>
@@ -231,7 +276,6 @@ export const generateInvoice = (data: InvoiceData): void => {
     <table>
         <thead>
             <tr>
-                <th style="width: 60px;"></th>
                 <th>Item</th>
                 <th class="text-right">Qty</th>
                 <th class="text-right">Unit Price</th>
@@ -239,13 +283,8 @@ export const generateInvoice = (data: InvoiceData): void => {
             </tr>
         </thead>
         <tbody>
-            ${data.items.map(item => `
+            ${displayItems.map(item => `
                 <tr>
-                    <td>
-                        ${item.fabric_image
-            ? `<img src="${item.fabric_image}" alt="${item.fabric_name}" class="item-image">`
-            : '<div style="width:50px;height:50px;background:#f0f0f0;border-radius:4px;"></div>'}
-                    </td>
                     <td class="item-name">${item.fabric_name}</td>
                     <td class="text-right">${item.quantity} pc${item.quantity > 1 ? 's' : ''}</td>
                     <td class="text-right">${formatCurrency(item.unit_price, data.currency)}</td>
@@ -272,17 +311,9 @@ export const generateInvoice = (data: InvoiceData): void => {
         </div>
     </div>
 
-    ${data.notes ? `
-        <div class="notes">
-            <h4>Notes</h4>
-            <p>${data.notes}</p>
-        </div>
-    ` : ''}
-
     <div class="footer">
         <p>Thank you for shopping with Ikso AfriFabs!</p>
-        <p style="margin-top: 8px;">For questions about this invoice, contact us on WhatsApp</p>
-        <p style="margin-top: 16px; font-size: 10px;">iksoafrifabs.com</p>
+        <p style="margin-top: 8px;">For questions about this invoice, contact us on WhatsApp: <span class="whatsapp-link">+234 816 571 5235</span></p>
     </div>
 
     <script>
@@ -304,3 +335,4 @@ export const generateInvoice = (data: InvoiceData): void => {
 };
 
 export default generateInvoice;
+
