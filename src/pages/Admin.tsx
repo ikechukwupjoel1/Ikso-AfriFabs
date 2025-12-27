@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +75,7 @@ const Admin = () => {
     const [fabrics, setFabrics] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
     const [admins, setAdmins] = useState<any[]>([]);
+    const [discounts, setDiscounts] = useState<any[]>([]);
 
     // UI states
     const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +87,20 @@ const Admin = () => {
     const [selectedFabrics, setSelectedFabrics] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
+
+    // Discount dialog states
+    const [showDiscountDialog, setShowDiscountDialog] = useState(false);
+    const [editingDiscount, setEditingDiscount] = useState<any>(null);
+    const [discountForm, setDiscountForm] = useState({
+        code: '',
+        discount_type: 'percentage',
+        discount_value: 10,
+        min_order_amount: 0,
+        max_uses: null as number | null,
+        valid_from: '',
+        valid_until: '',
+        is_active: true
+    });
 
     // Check admin access
     useEffect(() => {
@@ -148,6 +163,7 @@ const Admin = () => {
         if (isAdmin) {
             fetchFabrics();
             fetchOrders();
+            fetchDiscounts();
             if (adminRole === 'super_admin') {
                 fetchAdmins();
             }
@@ -249,6 +265,96 @@ const Admin = () => {
         } catch (err) {
             console.error('Error fetching admins:', err);
         }
+    };
+
+    const fetchDiscounts = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('discount_codes')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setDiscounts(data || []);
+        } catch (err) {
+            console.error('Error fetching discounts:', err);
+        }
+    };
+
+    const handleSaveDiscount = async () => {
+        try {
+            const discountData = {
+                code: discountForm.code.toUpperCase(),
+                discount_type: discountForm.discount_type,
+                discount_value: discountForm.discount_value,
+                min_order_amount: discountForm.min_order_amount || 0,
+                max_uses: discountForm.max_uses,
+                valid_from: discountForm.valid_from || null,
+                valid_until: discountForm.valid_until || null,
+                is_active: discountForm.is_active
+            };
+
+            if (editingDiscount) {
+                const { error } = await supabase
+                    .from('discount_codes')
+                    .update(discountData)
+                    .eq('id', editingDiscount.id);
+                if (error) throw error;
+                toast.success('Discount code updated!');
+            } else {
+                const { error } = await supabase
+                    .from('discount_codes')
+                    .insert(discountData);
+                if (error) throw error;
+                toast.success('Discount code created!');
+            }
+
+            setShowDiscountDialog(false);
+            setEditingDiscount(null);
+            setDiscountForm({
+                code: '',
+                discount_type: 'percentage',
+                discount_value: 10,
+                min_order_amount: 0,
+                max_uses: null,
+                valid_from: '',
+                valid_until: '',
+                is_active: true
+            });
+            fetchDiscounts();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to save discount');
+        }
+    };
+
+    const handleDeleteDiscount = async (id: string) => {
+        if (!confirm('Delete this discount code?')) return;
+        try {
+            const { error } = await supabase
+                .from('discount_codes')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+            toast.success('Discount deleted');
+            fetchDiscounts();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to delete');
+        }
+    };
+
+    const openEditDiscount = (discount: any) => {
+        setEditingDiscount(discount);
+        setDiscountForm({
+            code: discount.code,
+            discount_type: discount.discount_type,
+            discount_value: discount.discount_value,
+            min_order_amount: discount.min_order_amount || 0,
+            max_uses: discount.max_uses,
+            valid_from: discount.valid_from || '',
+            valid_until: discount.valid_until || '',
+            is_active: discount.is_active
+        });
+        setShowDiscountDialog(true);
     };
 
     const handleAddAdmin = async () => {
@@ -559,6 +665,12 @@ const Admin = () => {
                                 <TabsTrigger value="hero" className="gap-2">
                                     <Sparkles className="w-4 h-4" />
                                     Hero Sections
+                                </TabsTrigger>
+                            )}
+                            {canManageProducts && (
+                                <TabsTrigger value="discounts" className="gap-2">
+                                    <Tag className="w-4 h-4" />
+                                    Discounts
                                 </TabsTrigger>
                             )}
                             <TabsTrigger value="analytics" className="gap-2">
@@ -902,6 +1014,172 @@ const Admin = () => {
                         {canManageProducts && (
                             <TabsContent value="hero">
                                 <HeroManager />
+                            </TabsContent>
+                        )}
+
+                        {/* Discounts Tab */}
+                        {canManageProducts && (
+                            <TabsContent value="discounts">
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <CardTitle>Discount Codes</CardTitle>
+                                                <CardDescription>Create and manage discount codes for customers</CardDescription>
+                                            </div>
+                                            <Button size="sm" onClick={() => {
+                                                setEditingDiscount(null);
+                                                setDiscountForm({
+                                                    code: '',
+                                                    discount_type: 'percentage',
+                                                    discount_value: 10,
+                                                    min_order_amount: 0,
+                                                    max_uses: null,
+                                                    valid_from: '',
+                                                    valid_until: '',
+                                                    is_active: true
+                                                });
+                                                setShowDiscountDialog(true);
+                                            }}>
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                Add Discount
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {discounts.length > 0 ? (
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Code</TableHead>
+                                                        <TableHead>Type</TableHead>
+                                                        <TableHead>Value</TableHead>
+                                                        <TableHead>Min Order</TableHead>
+                                                        <TableHead>Uses</TableHead>
+                                                        <TableHead>Status</TableHead>
+                                                        <TableHead>Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {discounts.map((discount) => (
+                                                        <TableRow key={discount.id}>
+                                                            <TableCell className="font-mono font-bold">{discount.code}</TableCell>
+                                                            <TableCell className="capitalize">{discount.discount_type}</TableCell>
+                                                            <TableCell>
+                                                                {discount.discount_type === 'percentage'
+                                                                    ? `${discount.discount_value}%`
+                                                                    : `₦${discount.discount_value.toLocaleString()}`}
+                                                            </TableCell>
+                                                            <TableCell>₦{(discount.min_order_amount || 0).toLocaleString()}</TableCell>
+                                                            <TableCell>
+                                                                {discount.times_used || 0} / {discount.max_uses || '∞'}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <span className={`px-2 py-1 rounded-full text-xs ${discount.is_active
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : 'bg-gray-100 text-gray-800'
+                                                                    }`}>
+                                                                    {discount.is_active ? 'Active' : 'Inactive'}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex gap-2">
+                                                                    <Button size="sm" variant="ghost" onClick={() => openEditDiscount(discount)}>
+                                                                        <Edit2 className="w-4 h-4" />
+                                                                    </Button>
+                                                                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDeleteDiscount(discount.id)}>
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        ) : (
+                                            <div className="text-center py-12 text-muted-foreground">
+                                                <Tag className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                                <p>No discount codes yet</p>
+                                                <p className="text-sm">Create your first discount code above</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Discount Dialog */}
+                                <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>{editingDiscount ? 'Edit Discount Code' : 'Create Discount Code'}</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label>Code</Label>
+                                                <Input
+                                                    value={discountForm.code}
+                                                    onChange={(e) => setDiscountForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                                                    placeholder="WELCOME10"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label>Type</Label>
+                                                    <Select value={discountForm.discount_type} onValueChange={(v) => setDiscountForm(prev => ({ ...prev, discount_type: v }))}>
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="percentage">Percentage (%)</SelectItem>
+                                                            <SelectItem value="fixed">Fixed Amount</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div>
+                                                    <Label>Value</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={discountForm.discount_value}
+                                                        onChange={(e) => setDiscountForm(prev => ({ ...prev, discount_value: Number(e.target.value) }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label>Min Order Amount (₦)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={discountForm.min_order_amount}
+                                                        onChange={(e) => setDiscountForm(prev => ({ ...prev, min_order_amount: Number(e.target.value) }))}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label>Max Uses (empty = unlimited)</Label>
+                                                    <Input
+                                                        type="number"
+                                                        value={discountForm.max_uses || ''}
+                                                        onChange={(e) => setDiscountForm(prev => ({ ...prev, max_uses: e.target.value ? Number(e.target.value) : null }))}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={discountForm.is_active}
+                                                    onChange={(e) => setDiscountForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                                                    className="w-4 h-4"
+                                                />
+                                                <Label>Active</Label>
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setShowDiscountDialog(false)}>Cancel</Button>
+                                            <Button onClick={handleSaveDiscount}>
+                                                <Save className="w-4 h-4 mr-2" />
+                                                {editingDiscount ? 'Update' : 'Create'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </TabsContent>
                         )}
 
