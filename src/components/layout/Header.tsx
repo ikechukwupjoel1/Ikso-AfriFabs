@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown, MapPin } from 'lucide-react';
+import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown, MapPin, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -150,6 +150,12 @@ const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
                           <Link to="/gallery?filter=favorites" className="flex items-center gap-2">
                             <Heart className="h-4 w-4" />
                             <span className="text-xs font-medium">Favorites</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer py-2 px-3">
+                          <Link to="/admin" className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            <span className="text-xs font-medium">Admin Dashboard</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
