@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Sparkles, X } from 'lucide-react';
+import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Currency } from '@/types/fabric';
 
@@ -73,9 +73,13 @@ const WelcomeModal = ({ onSelectCurrency, detectedCountry, detectedCurrency }: W
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ delay: 0.2, type: "spring" }}
-                                    className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-4"
+                                    className="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-4 p-2"
                                 >
-                                    <Sparkles className="w-8 h-8 text-primary" />
+                                    <img
+                                        src="/Ikso AfriFabs Logo Dark 1.webp"
+                                        alt="Ikso AfriFabs"
+                                        className="w-full h-full object-contain"
+                                    />
                                 </motion.div>
 
                                 <motion.h2
@@ -131,8 +135,8 @@ const WelcomeModal = ({ onSelectCurrency, detectedCountry, detectedCurrency }: W
                                     <button
                                         onClick={() => handleSelectCurrency('NGN')}
                                         className={`p-4 rounded-xl border-2 transition-all hover:scale-[1.02] ${detectedCurrency === 'NGN'
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-gray-200 hover:border-primary/50'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-gray-200 hover:border-primary/50'
                                             }`}
                                     >
                                         <div className="text-2xl mb-1">🇳🇬</div>
@@ -146,8 +150,8 @@ const WelcomeModal = ({ onSelectCurrency, detectedCountry, detectedCurrency }: W
                                     <button
                                         onClick={() => handleSelectCurrency('CFA')}
                                         className={`p-4 rounded-xl border-2 transition-all hover:scale-[1.02] ${detectedCurrency === 'CFA'
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-gray-200 hover:border-primary/50'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-gray-200 hover:border-primary/50'
                                             }`}
                                     >
                                         <div className="text-2xl mb-1">🌍</div>
