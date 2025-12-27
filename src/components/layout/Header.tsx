@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown, MapPin, Shield } from 'lucide-react';
+import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +16,9 @@ import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
 import CartDrawer from '@/components/cart/CartDrawer';
+import { supabase } from '@/lib/supabase';
+
+const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
 
 interface HeaderProps {
   currency: Currency;
@@ -26,12 +29,40 @@ interface HeaderProps {
 const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const { cartCount } = useCart();
   const { favoritesCount } = useFavorites();
   const { user, signOut, loading } = useAuth();
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      // Check super admin
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        setIsAdmin(true);
+        return;
+      }
+
+      // Check admin_users table
+      const { data } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('email', user.email?.toLowerCase())
+        .single();
+
+      setIsAdmin(!!data);
+    };
+
+    checkAdmin();
+  }, [user]);
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -147,7 +178,7 @@ const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
                           <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
                         </div>
                         <DropdownMenuItem asChild className="cursor-pointer py-2 px-3">
-                          <Link to="/account" className="flex items-center gap-2">
+                          <Link to={isAdmin ? "/admin" : "/account"} className="flex items-center gap-2">
                             <User className="h-4 w-4" />
                             <span className="text-xs font-medium">My Account</span>
                           </Link>
@@ -156,12 +187,6 @@ const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
                           <Link to="/gallery?filter=favorites" className="flex items-center gap-2">
                             <Heart className="h-4 w-4" />
                             <span className="text-xs font-medium">Favorites</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="cursor-pointer py-2 px-3">
-                          <Link to="/admin" className="flex items-center gap-2">
-                            <Shield className="h-4 w-4" />
-                            <span className="text-xs font-medium">Admin Dashboard</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
