@@ -103,6 +103,22 @@ const Admin = () => {
         is_active: true
     });
 
+    // Create Order dialog states
+    const [showCreateOrderDialog, setShowCreateOrderDialog] = useState(false);
+    const [createOrderForm, setCreateOrderForm] = useState({
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
+        address: '',
+        city: '',
+        state: '',
+        country: 'Nigeria',
+        currency: 'NGN' as 'NGN' | 'CFA',
+        items: [{ fabric_name: '', quantity: 1, unit_price: 0 }],
+        notes: '',
+        status: 'confirmed' as string,
+    });
+
     // Check admin access
     useEffect(() => {
         const checkAdminAccess = async () => {
@@ -484,6 +500,108 @@ const Admin = () => {
         }
     };
 
+    // Create offline order
+    const handleCreateOrder = async () => {
+        if (!createOrderForm.customer_name.trim()) {
+            toast.error('Please enter customer name');
+            return;
+        }
+        if (createOrderForm.items.length === 0 || !createOrderForm.items[0].fabric_name) {
+            toast.error('Please add at least one item');
+            return;
+        }
+
+        try {
+            // Calculate total
+            const total = createOrderForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+
+            // Build notes from items
+            const itemsText = createOrderForm.items.map(item =>
+                `${item.fabric_name} x${item.quantity} pcs`
+            ).join(', ');
+
+            const { data, error } = await supabase
+                .from('orders')
+                .insert({
+                    customer_name: createOrderForm.customer_name,
+                    customer_email: createOrderForm.customer_email || null,
+                    customer_phone: createOrderForm.customer_phone || null,
+                    address: createOrderForm.address || null,
+                    city: createOrderForm.city || null,
+                    state: createOrderForm.state || null,
+                    country: createOrderForm.country || 'Nigeria',
+                    currency: createOrderForm.currency,
+                    total_amount: total,
+                    status: createOrderForm.status,
+                    notes: `Items: ${itemsText}${createOrderForm.notes ? ` | Notes: ${createOrderForm.notes}` : ''}`,
+                    user_id: user?.id || null,
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // Add order items
+            if (data && createOrderForm.items.length > 0) {
+                const orderItems = createOrderForm.items.map(item => ({
+                    order_id: data.id,
+                    fabric_name: item.fabric_name,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                    yardage: item.quantity * 6, // Default 6 yards per piece
+                }));
+
+                await supabase.from('order_items').insert(orderItems);
+            }
+
+            toast.success('Order created successfully!');
+            setShowCreateOrderDialog(false);
+            setCreateOrderForm({
+                customer_name: '',
+                customer_email: '',
+                customer_phone: '',
+                address: '',
+                city: '',
+                state: '',
+                country: 'Nigeria',
+                currency: 'NGN',
+                items: [{ fabric_name: '', quantity: 1, unit_price: 0 }],
+                notes: '',
+                status: 'confirmed',
+            });
+            fetchOrders();
+        } catch (err: any) {
+            console.error('Error creating order:', err);
+            toast.error(err.message || 'Failed to create order');
+        }
+    };
+
+    // Add item to order form
+    const addOrderItem = () => {
+        setCreateOrderForm(prev => ({
+            ...prev,
+            items: [...prev.items, { fabric_name: '', quantity: 1, unit_price: 0 }]
+        }));
+    };
+
+    // Remove item from order form
+    const removeOrderItem = (index: number) => {
+        setCreateOrderForm(prev => ({
+            ...prev,
+            items: prev.items.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Update order item
+    const updateOrderItem = (index: number, field: string, value: any) => {
+        setCreateOrderForm(prev => ({
+            ...prev,
+            items: prev.items.map((item, i) =>
+                i === index ? { ...item, [field]: value } : item
+            )
+        }));
+    };
+
     const toggleSelectAllFabrics = () => {
         const filtered = fabrics.filter(f => f.name?.toLowerCase().includes(searchTerm.toLowerCase()));
         if (selectedFabrics.size === filtered.length) {
@@ -731,10 +849,16 @@ const Admin = () => {
                                                 <CardTitle>Order Management</CardTitle>
                                                 <CardDescription>View and manage customer orders</CardDescription>
                                             </div>
-                                            <Button variant="outline" size="sm" onClick={fetchOrders}>
-                                                <RefreshCw className="w-4 h-4 mr-2" />
-                                                Refresh
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" onClick={fetchOrders}>
+                                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                                    Refresh
+                                                </Button>
+                                                <Button size="sm" onClick={() => setShowCreateOrderDialog(true)}>
+                                                    <Plus className="w-4 h-4 mr-2" />
+                                                    Create Order
+                                                </Button>
+                                            </div>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
@@ -1387,6 +1511,200 @@ const Admin = () => {
                 fabric={selectedFabric}
                 onSuccess={fetchFabrics}
             />
+
+            {/* Create Order Dialog */}
+            <Dialog open={showCreateOrderDialog} onOpenChange={setShowCreateOrderDialog}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Create Offline Order</DialogTitle>
+                        <DialogDescription>
+                            Create a new order for offline/manual transactions
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        {/* Customer Info */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="customer_name">Customer Name *</Label>
+                                <Input
+                                    id="customer_name"
+                                    value={createOrderForm.customer_name}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, customer_name: e.target.value }))}
+                                    placeholder="Enter customer name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="customer_phone">Phone</Label>
+                                <Input
+                                    id="customer_phone"
+                                    value={createOrderForm.customer_phone}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, customer_phone: e.target.value }))}
+                                    placeholder="+234..."
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="customer_email">Email</Label>
+                                <Input
+                                    id="customer_email"
+                                    type="email"
+                                    value={createOrderForm.customer_email}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, customer_email: e.target.value }))}
+                                    placeholder="email@example.com"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="order_currency">Currency</Label>
+                                <Select
+                                    value={createOrderForm.currency}
+                                    onValueChange={(value: 'NGN' | 'CFA') => setCreateOrderForm(prev => ({ ...prev, currency: value }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="NGN">NGN (₦)</SelectItem>
+                                        <SelectItem value="CFA">CFA</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Input
+                                id="address"
+                                value={createOrderForm.address}
+                                onChange={(e) => setCreateOrderForm(prev => ({ ...prev, address: e.target.value }))}
+                                placeholder="Street address"
+                            />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="city">City</Label>
+                                <Input
+                                    id="city"
+                                    value={createOrderForm.city}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, city: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="state">State</Label>
+                                <Input
+                                    id="state"
+                                    value={createOrderForm.state}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, state: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="country">Country</Label>
+                                <Input
+                                    id="country"
+                                    value={createOrderForm.country}
+                                    onChange={(e) => setCreateOrderForm(prev => ({ ...prev, country: e.target.value }))}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label>Order Items *</Label>
+                                <Button type="button" variant="outline" size="sm" onClick={addOrderItem}>
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Add Item
+                                </Button>
+                            </div>
+                            <div className="space-y-3">
+                                {createOrderForm.items.map((item, index) => (
+                                    <div key={index} className="flex gap-2 items-end p-3 border rounded-lg bg-muted/30">
+                                        <div className="flex-1 space-y-1">
+                                            <Label className="text-xs">Fabric Name</Label>
+                                            <Input
+                                                value={item.fabric_name}
+                                                onChange={(e) => updateOrderItem(index, 'fabric_name', e.target.value)}
+                                                placeholder="e.g. Super VIP Collection"
+                                            />
+                                        </div>
+                                        <div className="w-20 space-y-1">
+                                            <Label className="text-xs">Qty (pcs)</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                            />
+                                        </div>
+                                        <div className="w-28 space-y-1">
+                                            <Label className="text-xs">Unit Price</Label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={item.unit_price}
+                                                onChange={(e) => updateOrderItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        {createOrderForm.items.length > 1 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-destructive"
+                                                onClick={() => removeOrderItem(index)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="text-right font-semibold">
+                                Total: {createOrderForm.currency === 'NGN' ? '₦' : 'CFA '}
+                                {createOrderForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toLocaleString()}
+                            </div>
+                        </div>
+
+                        {/* Status */}
+                        <div className="space-y-2">
+                            <Label htmlFor="order_status">Order Status</Label>
+                            <Select
+                                value={createOrderForm.status}
+                                onValueChange={(value) => setCreateOrderForm(prev => ({ ...prev, status: value }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pending">Pending</SelectItem>
+                                    <SelectItem value="confirmed">Confirmed (Payment Received)</SelectItem>
+                                    <SelectItem value="delivered">Delivered</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Notes */}
+                        <div className="space-y-2">
+                            <Label htmlFor="notes">Additional Notes</Label>
+                            <Input
+                                id="notes"
+                                value={createOrderForm.notes}
+                                onChange={(e) => setCreateOrderForm(prev => ({ ...prev, notes: e.target.value }))}
+                                placeholder="Any additional notes..."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowCreateOrderDialog(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleCreateOrder}>
+                            <Save className="w-4 h-4 mr-2" />
+                            Create Order
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Footer />
         </div>
