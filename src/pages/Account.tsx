@@ -410,15 +410,23 @@ const Account = () => {
                                                             {order.currency === 'NGN' ? '₦' : 'CFA'} {order.total_amount?.toLocaleString()}
                                                         </span>
                                                     </div>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="w-full mt-3"
-                                                        onClick={() => handleDownloadInvoice(order)}
-                                                    >
-                                                        <FileDown className="w-4 h-4 mr-2" />
-                                                        Download Invoice
-                                                    </Button>
+                                                    {/* Only show receipt download for confirmed/delivered orders */}
+                                                    {(order.status === 'confirmed' || order.status === 'delivered') && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full mt-3"
+                                                            onClick={() => handleDownloadInvoice(order)}
+                                                        >
+                                                            <FileDown className="w-4 h-4 mr-2" />
+                                                            Download Receipt
+                                                        </Button>
+                                                    )}
+                                                    {order.status === 'pending' && (
+                                                        <p className="text-xs text-muted-foreground mt-3 text-center">
+                                                            Receipt available after payment confirmation
+                                                        </p>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

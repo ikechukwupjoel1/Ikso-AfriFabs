@@ -81,7 +81,7 @@ export const generateInvoice = (data: InvoiceData): void => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice #${data.orderId.substring(0, 8).toUpperCase()} - Ikso AfriFabs</title>
+    <title>Receipt #${data.orderId.substring(0, 8).toUpperCase()} - Ikso AfriFabs</title>
     <style>
         * {
             margin: 0;
@@ -250,7 +250,7 @@ export const generateInvoice = (data: InvoiceData): void => {
             </div>
         </div>
         <div class="invoice-title">
-            <h1>INVOICE</h1>
+            <h1>RECEIPT</h1>
             <div class="invoice-number">#${data.orderId.substring(0, 8).toUpperCase()}</div>
         </div>
     </div>
@@ -266,7 +266,7 @@ export const generateInvoice = (data: InvoiceData): void => {
             ${data.country ? `<p>${data.country}</p>` : ''}
         </div>
         <div class="details-box" style="text-align: right;">
-            <h3>Invoice Details</h3>
+            <h3>Receipt Details</h3>
             <p><strong>Date:</strong> ${new Date(data.orderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             <p><strong>Currency:</strong> ${data.currency === 'NGN' ? 'Nigerian Naira (₦)' : 'West African CFA'}</p>
             <span class="status-badge status-${data.status}">${data.status}</span>
@@ -313,7 +313,7 @@ export const generateInvoice = (data: InvoiceData): void => {
 
     <div class="footer">
         <p>Thank you for shopping with Ikso AfriFabs!</p>
-        <p style="margin-top: 8px;">For questions about this invoice, contact us on WhatsApp: <span class="whatsapp-link">+234 816 571 5235</span></p>
+        <p style="margin-top: 8px;">For questions about this receipt, contact us on WhatsApp: <span class="whatsapp-link">+234 816 571 5235</span></p>
     </div>
 
     <script>
