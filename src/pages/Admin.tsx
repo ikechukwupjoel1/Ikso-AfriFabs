@@ -1076,8 +1076,8 @@ const Admin = () => {
                                                             </TableCell>
                                                             <TableCell>
                                                                 <span className={`px-2 py-1 rounded-full text-xs ${discount.is_active
-                                                                        ? 'bg-green-100 text-green-800'
-                                                                        : 'bg-gray-100 text-gray-800'
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : 'bg-gray-100 text-gray-800'
                                                                     }`}>
                                                                     {discount.is_active ? 'Active' : 'Inactive'}
                                                                 </span>
@@ -1304,7 +1304,7 @@ const Admin = () => {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {ADMIN_ROLES.filter(r => r.value !== 'super_admin').map((role) => (
+                                    {ADMIN_ROLES.map((role) => (
                                         <SelectItem key={role.value} value={role.value}>
                                             <div>
                                                 <p className="font-medium">{role.label}</p>
