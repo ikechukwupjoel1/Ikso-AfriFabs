@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 type SortOption = 'newest' | 'price-low' | 'price-high' | 'name';
 
 const GalleryPage = () => {
-  const { currency, toggleCurrency } = useCurrency();
+  const { currency, toggleCurrency, country } = useCurrency();
   const { data: fabrics = [], isLoading, error } = useFabrics();
   const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories();
   const { rate } = useExchangeRate();
@@ -96,7 +96,7 @@ const GalleryPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header currency={currency} onToggleCurrency={toggleCurrency} />
+      <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
 
       <main className="pt-24 pb-12">
         <div className="container mx-auto px-4">

@@ -9,11 +9,11 @@ import Footer from '@/components/layout/Footer';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const Index = () => {
-  const { currency, toggleCurrency } = useCurrency();
+  const { currency, toggleCurrency, country } = useCurrency();
 
   return (
     <div className="min-h-screen bg-background">
-      <Header currency={currency} onToggleCurrency={toggleCurrency} />
+      <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
       <main>
         <HeroSection />
         <PromoSection />

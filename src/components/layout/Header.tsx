@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, ShoppingBag, User, Heart, LogOut, ChevronDown, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -20,9 +20,10 @@ import CartDrawer from '@/components/cart/CartDrawer';
 interface HeaderProps {
   currency: Currency;
   onToggleCurrency: () => void;
+  country?: string;
 }
 
-const Header = ({ currency, onToggleCurrency }: HeaderProps) => {
+const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const location = useLocation();
@@ -103,12 +104,19 @@ const Header = ({ currency, onToggleCurrency }: HeaderProps) => {
 
             {/* Right: Actions */}
             <div className="flex items-center justify-end gap-1 md:gap-4">
-              {/* Currency Selector (Styled more like a boutique) */}
+              {/* Currency Selector with Country Indicator */}
               <button
                 onClick={onToggleCurrency}
-                className="text-[10px] md:text-xs font-bold tracking-tighter hover:text-primary transition-colors pr-2 md:pr-4 border-r border-gray-100"
+                className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold tracking-tighter hover:text-primary transition-colors pr-2 md:pr-4 border-r border-gray-100 group"
+                title={`Prices in ${currency === 'NGN' ? 'Nigerian Naira' : 'West African CFA'}${country ? ` (${country})` : ''}\nClick to change`}
               >
-                {currency === 'NGN' ? '₦ NGN' : 'CFA'}
+                <MapPin className="w-3 h-3 text-primary/60 group-hover:text-primary" />
+                <span className="hidden sm:inline text-muted-foreground">
+                  {country || (currency === 'NGN' ? 'Nigeria' : 'West Africa')}
+                </span>
+                <span className="font-bold">
+                  {currency === 'NGN' ? '₦ NGN' : 'CFA'}
+                </span>
               </button>
 
               <div className="flex items-center gap-1 md:gap-2">

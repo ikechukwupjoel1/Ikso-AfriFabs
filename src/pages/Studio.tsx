@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useCurrency } from '@/hooks/useCurrency';
 
 const Studio = () => {
-  const { currency, toggleCurrency } = useCurrency();
+  const { currency, toggleCurrency, country } = useCurrency();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -25,7 +25,7 @@ const Studio = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header currency={currency} onToggleCurrency={toggleCurrency} />
+      <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
 
       <main className="pt-24 pb-12">
         <div className="container mx-auto px-4">

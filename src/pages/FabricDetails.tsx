@@ -20,7 +20,7 @@ import { calculatePrice, formatPrice } from '@/lib/currency';
 
 const FabricDetails = () => {
     const { id } = useParams<{ id: string }>();
-    const { currency, toggleCurrency } = useCurrency();
+    const { currency, toggleCurrency, country } = useCurrency();
     const { data: fabrics = [], isLoading } = useFabrics();
     const { addToCart, isInCart } = useCart();
     const { toggleFavorite, isFavorite } = useFavorites();
@@ -35,7 +35,7 @@ const FabricDetails = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-background">
-                <Header currency={currency} onToggleCurrency={toggleCurrency} />
+                <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
                 <div className="min-h-screen pt-24 flex items-center justify-center">
                     <div className="text-center">
                         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -49,7 +49,7 @@ const FabricDetails = () => {
     if (!fabric) {
         return (
             <div className="min-h-screen bg-background">
-                <Header currency={currency} onToggleCurrency={toggleCurrency} />
+                <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
                 <div className="min-h-screen pt-24 flex items-center justify-center">
                     <div className="text-center">
                         <h1 className="font-display text-3xl mb-4">Fabric Not Found</h1>
@@ -90,7 +90,7 @@ const FabricDetails = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            <Header currency={currency} onToggleCurrency={toggleCurrency} />
+            <Header currency={currency} onToggleCurrency={toggleCurrency} country={country} />
 
             <main className="pt-24 pb-12">
                 <div className="container mx-auto px-4">
