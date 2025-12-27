@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Heart, Package, Settings, LogOut, ChevronRight, Edit2, Save } from 'lucide-react';
+import { User, Heart, Package, Settings, LogOut, ChevronRight, Edit2, Save, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import FabricCard from '@/components/fabric/FabricCard';
 import { Currency } from '@/types/fabric';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { generateInvoice } from '@/utils/invoiceGenerator';
 
 const Account = () => {
     const navigate = useNavigate();
@@ -151,6 +152,36 @@ const Account = () => {
             case 'cancelled': return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
+    };
+
+    const handleDownloadInvoice = (order: any) => {
+        // Parse items from the order
+        const items = Array.isArray(order.items) ? order.items : [];
+
+        generateInvoice({
+            orderId: order.id,
+            orderDate: order.created_at,
+            customerName: order.customer_name || profile.full_name || user?.email?.split('@')[0] || 'Customer',
+            customerEmail: order.customer_email || user?.email || '',
+            customerPhone: order.customer_phone || profile.phone,
+            address: order.address,
+            city: order.city,
+            state: order.state,
+            country: order.country,
+            items: items.map((item: any) => ({
+                fabric_name: item.fabric_name || 'Fabric',
+                fabric_image: item.fabric_image,
+                quantity: item.quantity || 1,
+                unit_price: item.unit_price || item.price || 0,
+            })),
+            subtotal: order.total_amount || 0,
+            discount: order.discount_amount,
+            discountCode: order.discount_code,
+            total: order.total_amount || 0,
+            currency: order.currency || 'NGN',
+            status: order.status || 'pending',
+            notes: order.notes,
+        });
     };
 
     if (authLoading || profileLoading) {
@@ -379,6 +410,15 @@ const Account = () => {
                                                             {order.currency === 'NGN' ? '₦' : 'CFA'} {order.total_amount?.toLocaleString()}
                                                         </span>
                                                     </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full mt-3"
+                                                        onClick={() => handleDownloadInvoice(order)}
+                                                    >
+                                                        <FileDown className="w-4 h-4 mr-2" />
+                                                        Download Invoice
+                                                    </Button>
                                                 </div>
                                             ))}
                                         </div>
