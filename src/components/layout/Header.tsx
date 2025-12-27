@@ -147,6 +147,12 @@ const Header = ({ currency, onToggleCurrency, country }: HeaderProps) => {
                           <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
                         </div>
                         <DropdownMenuItem asChild className="cursor-pointer py-2 px-3">
+                          <Link to="/account" className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            <span className="text-xs font-medium">My Account</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="cursor-pointer py-2 px-3">
                           <Link to="/gallery?filter=favorites" className="flex items-center gap-2">
                             <Heart className="h-4 w-4" />
                             <span className="text-xs font-medium">Favorites</span>
