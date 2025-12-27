@@ -76,7 +76,7 @@ const WelcomeModal = ({ onSelectCurrency, detectedCountry, detectedCurrency }: W
                                     className="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-4 p-2"
                                 >
                                     <img
-                                        src="/Ikso AfriFabs Logo Dark 1.webp"
+                                        src="/favicon.png"
                                         alt="Ikso AfriFabs"
                                         className="w-full h-full object-contain"
                                     />
