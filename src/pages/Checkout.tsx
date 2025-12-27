@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, Tag, CheckCircle, X } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { formatPrice, calculatePrice } from '@/lib/currency';
+import { useDiscountCode } from '@/hooks/useDiscountCode';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -24,6 +25,10 @@ const Checkout = () => {
     const { rate } = useExchangeRate();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+
+    // Discount code state
+    const [discountCode, setDiscountCode] = useState('');
+    const { validateCode, appliedDiscount, isValidating, clearDiscount } = useDiscountCode();
 
     const [formData, setFormData] = useState<OrderData>({
         customer_name: '',
@@ -116,7 +121,35 @@ const Checkout = () => {
 
     const ordersIdShort = (id: string) => id.split('-')[0].toUpperCase();
 
-    const total = getCartTotal(currency, rate);
+    const subtotal = getCartTotal(currency, rate);
+
+    // Calculate discount amount
+    const discountAmount = appliedDiscount
+        ? appliedDiscount.discount_type === 'percentage'
+            ? (subtotal * appliedDiscount.discount_value) / 100
+            : appliedDiscount.discount_value
+        : 0;
+
+    const total = subtotal - discountAmount;
+
+    const handleApplyDiscount = async () => {
+        if (!discountCode.trim()) return;
+        const result = await validateCode(discountCode, subtotal);
+        if (result.valid) {
+            toast({
+                title: "Discount applied!",
+                description: result.discount_type === 'percentage'
+                    ? `${result.discount_value}% off your order`
+                    : `${formatPrice(result.discount_value, currency)} off your order`,
+            });
+        } else {
+            toast({
+                title: "Invalid code",
+                description: result.error || "This discount code is not valid",
+                variant: "destructive"
+            });
+        }
+    };
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -314,11 +347,65 @@ const Checkout = () => {
 
                                     <Separator />
 
+                                    {/* Discount Code Input */}
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Enter discount code"
+                                                    value={discountCode}
+                                                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                                                    className="pl-10"
+                                                    disabled={!!appliedDiscount}
+                                                />
+                                            </div>
+                                            {appliedDiscount ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={clearDiscount}
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={handleApplyDiscount}
+                                                    disabled={isValidating || !discountCode.trim()}
+                                                >
+                                                    {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {appliedDiscount && (
+                                            <div className="flex items-center gap-2 text-green-600 text-sm">
+                                                <CheckCircle className="w-4 h-4" />
+                                                <span>
+                                                    {appliedDiscount.code}: {appliedDiscount.discount_type === 'percentage'
+                                                        ? `${appliedDiscount.discount_value}% off`
+                                                        : `${formatPrice(appliedDiscount.discount_value, currency)} off`
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <Separator />
+
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Subtotal</span>
-                                            <span>{formatPrice(total, currency)}</span>
+                                            <span>{formatPrice(subtotal, currency)}</span>
                                         </div>
+                                        {discountAmount > 0 && (
+                                            <div className="flex justify-between text-sm text-green-600">
+                                                <span>Discount</span>
+                                                <span>-{formatPrice(discountAmount, currency)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Shipping</span>
                                             <span>Calculated later</span>
