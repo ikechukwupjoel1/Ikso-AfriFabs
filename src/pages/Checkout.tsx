@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, ShoppingBag, Tag, CheckCircle, X } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, Tag, CheckCircle, X, AlertTriangle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useExchangeRate } from '@/hooks/useExchangeRate';
+import { useRateLimit } from '@/hooks/useRateLimit';
 import { createOrder, OrderData } from '@/services/orderService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,9 @@ const Checkout = () => {
 
     // Discount code state
     const [discountCode, setDiscountCode] = useState('');
+
+    // Rate limiting
+    const { checkRateLimit, checking: checkingRateLimit, rateLimitError, clearRateLimitError } = useRateLimit();
     const { validateCode, appliedDiscount, isValidating, clearDiscount } = useDiscountCode();
 
     const [formData, setFormData] = useState<OrderData>({
@@ -74,8 +78,21 @@ const Checkout = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        clearRateLimitError();
 
         try {
+            // 0. Check rate limit first
+            const rateLimitResult = await checkRateLimit();
+            if (!rateLimitResult.allowed) {
+                toast({
+                    title: "Order limit reached",
+                    description: rateLimitResult.message || "Please try again later.",
+                    variant: "destructive"
+                });
+                setLoading(false);
+                return;
+            }
+
             // 1. Create Order in DB
             const order = await createOrder(formData, items, rate, user?.id);
 
@@ -426,7 +443,7 @@ const Checkout = () => {
                                         size="lg"
                                         type="submit"
                                         form="checkout-form"
-                                        disabled={loading}
+                                        disabled={loading || checkingRateLimit}
                                     >
                                         {loading ? (
                                             <>

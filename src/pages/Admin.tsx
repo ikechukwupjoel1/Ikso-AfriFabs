@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Shield, Users, Package, Layers, Plus, Edit2, Trash2,
-    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp, Tag, FileDown
+    Save, X, ChevronDown, Search, RefreshCw, UserPlus, FolderTree, Sparkles, Check, Copy, TrendingUp, Tag, FileDown, History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,11 +49,13 @@ import { FabricDialog } from '@/components/admin/FabricDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HeroManager } from '@/components/admin/HeroManager';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
+import { AuditLogViewer } from '@/components/admin/AuditLogViewer';
 import { fabrics as localFabrics } from '@/data/fabrics';
 import { generateInvoice } from '@/utils/invoiceGenerator';
+import { logAdminAction } from '@/utils/auditLog';
 
-// Super admin email
-const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
+// Super admin email from environment variable
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
 
 // Admin roles with descriptions
 const ADMIN_ROLES = [
@@ -317,12 +319,33 @@ const Admin = () => {
                     .update(discountData)
                     .eq('id', editingDiscount.id);
                 if (error) throw error;
+
+                // Log audit
+                await logAdminAction({
+                    action: 'UPDATE',
+                    tableName: 'discount_codes',
+                    recordId: editingDiscount.id,
+                    oldValues: { code: editingDiscount.code, discount_value: editingDiscount.discount_value },
+                    newValues: discountData
+                });
+
                 toast.success('Discount code updated!');
             } else {
-                const { error } = await supabase
+                const { data: newDiscount, error } = await supabase
                     .from('discount_codes')
-                    .insert(discountData);
+                    .insert(discountData)
+                    .select()
+                    .single();
                 if (error) throw error;
+
+                // Log audit
+                await logAdminAction({
+                    action: 'INSERT',
+                    tableName: 'discount_codes',
+                    recordId: newDiscount?.id,
+                    newValues: discountData
+                });
+
                 toast.success('Discount code created!');
             }
 
@@ -346,12 +369,25 @@ const Admin = () => {
 
     const handleDeleteDiscount = async (id: string) => {
         if (!confirm('Delete this discount code?')) return;
+
+        // Get discount data before deleting for audit log
+        const discountToDelete = discounts.find(d => d.id === id);
+
         try {
             const { error } = await supabase
                 .from('discount_codes')
                 .delete()
                 .eq('id', id);
             if (error) throw error;
+
+            // Log audit
+            await logAdminAction({
+                action: 'DELETE',
+                tableName: 'discount_codes',
+                recordId: id,
+                oldValues: discountToDelete ? { code: discountToDelete.code } : undefined
+            });
+
             toast.success('Discount deleted');
             fetchDiscounts();
         } catch (err: any) {
@@ -381,18 +417,62 @@ const Admin = () => {
         }
 
         try {
-            // Insert admin by email only (no user_id needed)
-            const { error } = await supabase
+            // Check if admin already exists (use maybeSingle to avoid error when not found)
+            const { data: existingAdmin, error: checkError } = await supabase
                 .from('admin_users')
-                .insert({
-                    email: newAdminEmail.toLowerCase(),
-                    role: newAdminRole,
-                    created_by: user?.id,
+                .select('id, email, role')
+                .eq('email', newAdminEmail.toLowerCase())
+                .maybeSingle();
+
+            // Only throw if it's a real error, not "no rows returned"
+            if (checkError && checkError.code !== 'PGRST116') {
+                throw checkError;
+            }
+
+            if (existingAdmin) {
+                // Admin exists - update their role instead
+                const { error } = await supabase
+                    .from('admin_users')
+                    .update({ role: newAdminRole, updated_at: new Date().toISOString() })
+                    .eq('id', existingAdmin.id);
+
+                if (error) throw error;
+
+                // Log audit
+                await logAdminAction({
+                    action: 'UPDATE',
+                    tableName: 'admin_users',
+                    recordId: existingAdmin.id,
+                    oldValues: { email: existingAdmin.email, role: existingAdmin.role },
+                    newValues: { role: newAdminRole }
                 });
 
-            if (error) throw error;
+                toast.success(`Admin ${newAdminEmail} role updated to ${newAdminRole}!`);
+            } else {
+                // Insert new admin
+                const { data: newAdmin, error } = await supabase
+                    .from('admin_users')
+                    .insert({
+                        email: newAdminEmail.toLowerCase(),
+                        role: newAdminRole,
+                        created_by: user?.id,
+                    })
+                    .select()
+                    .single();
 
-            toast.success(`Admin ${newAdminEmail} added successfully!`);
+                if (error) throw error;
+
+                // Log audit
+                await logAdminAction({
+                    action: 'INSERT',
+                    tableName: 'admin_users',
+                    recordId: newAdmin?.id,
+                    newValues: { email: newAdminEmail.toLowerCase(), role: newAdminRole }
+                });
+
+                toast.success(`Admin ${newAdminEmail} added successfully!`);
+            }
+
             setShowAddAdminDialog(false);
             setNewAdminEmail('');
             setNewAdminRole('viewer');
@@ -404,6 +484,10 @@ const Admin = () => {
     };
 
     const handleUpdateAdminRole = async (adminId: string, newRole: string) => {
+        // Get old role for audit
+        const admin = admins.find(a => a.id === adminId);
+        const oldRole = admin?.role;
+
         try {
             const { error } = await supabase
                 .from('admin_users')
@@ -411,6 +495,15 @@ const Admin = () => {
                 .eq('id', adminId);
 
             if (error) throw error;
+
+            // Log audit
+            await logAdminAction({
+                action: 'UPDATE',
+                tableName: 'admin_users',
+                recordId: adminId,
+                oldValues: { role: oldRole },
+                newValues: { role: newRole }
+            });
 
             toast.success('Admin role updated');
             fetchAdmins();
@@ -428,6 +521,9 @@ const Admin = () => {
 
         if (!confirm('Are you sure you want to remove this admin?')) return;
 
+        // Get admin data for audit
+        const adminToRemove = admins.find(a => a.id === adminId);
+
         try {
             const { error } = await supabase
                 .from('admin_users')
@@ -435,6 +531,14 @@ const Admin = () => {
                 .eq('id', adminId);
 
             if (error) throw error;
+
+            // Log audit
+            await logAdminAction({
+                action: 'DELETE',
+                tableName: 'admin_users',
+                recordId: adminId,
+                oldValues: adminToRemove ? { email: adminToRemove.email, role: adminToRemove.role } : undefined
+            });
 
             toast.success('Admin removed');
             fetchAdmins();
@@ -491,6 +595,14 @@ const Admin = () => {
                 .eq('id', fabricId);
 
             if (error) throw error;
+
+            // Log audit
+            await logAdminAction({
+                action: 'DELETE',
+                tableName: 'fabrics',
+                recordId: fabricId,
+                oldValues: { name: fabricName }
+            });
 
             toast.success('Fabric deleted successfully');
             fetchFabrics();
@@ -670,6 +782,10 @@ const Admin = () => {
     };
 
     const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+        // Get old status for audit
+        const order = orders.find(o => o.id === orderId);
+        const oldStatus = order?.status;
+
         try {
             const { error } = await supabase
                 .from('orders')
@@ -677,6 +793,15 @@ const Admin = () => {
                 .eq('id', orderId);
 
             if (error) throw error;
+
+            // Log audit
+            await logAdminAction({
+                action: 'UPDATE',
+                tableName: 'orders',
+                recordId: orderId,
+                oldValues: { status: oldStatus },
+                newValues: { status: newStatus }
+            });
 
             toast.success('Order status updated');
             fetchOrders();
@@ -835,6 +960,12 @@ const Admin = () => {
                                 <TabsTrigger value="admins" className="gap-2">
                                     <Users className="w-4 h-4" />
                                     Admins
+                                </TabsTrigger>
+                            )}
+                            {canManageAdmins && (
+                                <TabsTrigger value="audit" className="gap-2">
+                                    <History className="w-4 h-4" />
+                                    Audit Logs
                                 </TabsTrigger>
                             )}
                         </TabsList>
@@ -1448,6 +1579,13 @@ const Admin = () => {
                         <TabsContent value="analytics">
                             <AnalyticsDashboard />
                         </TabsContent>
+
+                        {/* Audit Logs Tab */}
+                        {canManageAdmins && (
+                            <TabsContent value="audit">
+                                <AuditLogViewer />
+                            </TabsContent>
+                        )}
                     </Tabs>
                 </div>
             </main>

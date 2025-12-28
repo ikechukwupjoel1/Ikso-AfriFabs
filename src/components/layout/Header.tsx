@@ -18,7 +18,8 @@ import { useAuth } from '@/context/AuthContext';
 import CartDrawer from '@/components/cart/CartDrawer';
 import { supabase } from '@/lib/supabase';
 
-const SUPER_ADMIN_EMAIL = 'iksotech@gmail.com';
+// Super admin email from environment variable
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
 
 interface HeaderProps {
   currency: Currency;

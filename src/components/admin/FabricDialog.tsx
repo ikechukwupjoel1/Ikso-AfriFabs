@@ -24,6 +24,7 @@ import { ImageUpload } from './ImageUpload';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { getCfaToNgnRate, cfaToNgnSync, ngnToCfaSync } from '@/lib/exchangeRate';
+import { logAdminAction } from '@/utils/auditLog';
 
 interface FabricCategory {
     id: string;
@@ -209,6 +210,15 @@ export const FabricDialog = ({
 
                 if (error) throw error;
 
+                // Log audit
+                await logAdminAction({
+                    action: 'UPDATE',
+                    tableName: 'fabrics',
+                    recordId: fabric.id,
+                    oldValues: { name: fabric.name, price_ngn: fabric.price_ngn },
+                    newValues: { name: fabricData.name, price_ngn: fabricData.price_ngn }
+                });
+
                 toast.success('Fabric updated successfully');
             } else {
                 // Generate SKU if not provided
@@ -218,14 +228,24 @@ export const FabricDialog = ({
                 }
 
                 // Insert new fabric
-                const { error } = await supabase
+                const { data: newFabric, error } = await supabase
                     .from('fabrics')
                     .insert({
                         ...fabricData,
                         created_at: new Date().toISOString(),
-                    });
+                    })
+                    .select()
+                    .single();
 
                 if (error) throw error;
+
+                // Log audit
+                await logAdminAction({
+                    action: 'INSERT',
+                    tableName: 'fabrics',
+                    recordId: newFabric?.id,
+                    newValues: { name: fabricData.name, brand: fabricData.brand, price_ngn: fabricData.price_ngn }
+                });
 
                 toast.success('Fabric added successfully');
             }
