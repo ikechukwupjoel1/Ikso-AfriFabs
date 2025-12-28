@@ -57,10 +57,13 @@ DECLARE
     admin_email_val TEXT;
     log_id UUID;
 BEGIN
-    -- Get current user's email
-    SELECT email INTO admin_email_val 
-    FROM auth.users 
-    WHERE id = auth.uid();
+    -- Get current user's email from JWT claim (avoids permission issues with auth.users)
+    admin_email_val := auth.jwt() ->> 'email';
+    
+    -- If no email found, return null
+    IF admin_email_val IS NULL THEN
+        RETURN NULL;
+    END IF;
     
     -- Only log if user is an admin
     IF NOT EXISTS (SELECT 1 FROM admin_users WHERE email = admin_email_val) THEN
