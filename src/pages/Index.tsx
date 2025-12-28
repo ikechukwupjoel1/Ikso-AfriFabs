@@ -3,7 +3,7 @@ import PromoSection from '@/components/home/PromoSection';
 import CategoryShowcase from '@/components/home/CategoryShowcase';
 import FeaturedFabrics from '@/components/home/FeaturedFabrics';
 import StudioPreview from '@/components/home/StudioPreview';
-import WhatsAppCTA from '@/components/home/WhatsAppCTA';
+import AfricanFabricFacts from '@/components/home/AfricanFabricFacts';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import WelcomeModal from '@/components/layout/WelcomeModal';
@@ -28,7 +28,7 @@ const Index = () => {
         <PromoSection />
         <CategoryShowcase />
         <FeaturedFabrics currency={currency} />
-        <WhatsAppCTA />
+        <AfricanFabricFacts />
         <StudioPreview />
       </main>
       <Footer />

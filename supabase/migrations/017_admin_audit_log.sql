@@ -28,18 +28,20 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_record ON admin_audit_logs(table_name,
 -- SECTION 3: Enable RLS
 ALTER TABLE admin_audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Only super admins can view audit logs
+-- Only super admins can view audit logs (use DROP POLICY IF EXISTS for reruns)
+DROP POLICY IF EXISTS "Super admins can view audit logs" ON admin_audit_logs;
 CREATE POLICY "Super admins can view audit logs"
 ON admin_audit_logs FOR SELECT
 USING (
     EXISTS (
         SELECT 1 FROM admin_users 
-        WHERE email = (SELECT email FROM auth.users WHERE id = auth.uid())
+        WHERE email = (auth.jwt() ->> 'email')
         AND role = 'super_admin'
     )
 );
 
 -- Only authenticated users can insert (via function)
+DROP POLICY IF EXISTS "System can insert audit logs" ON admin_audit_logs;
 CREATE POLICY "System can insert audit logs"
 ON admin_audit_logs FOR INSERT
 WITH CHECK (auth.uid() IS NOT NULL);
