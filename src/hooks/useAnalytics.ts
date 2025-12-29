@@ -78,8 +78,11 @@ export function useAnalytics() {
             const completedOrders = ordersList.filter(o => o.status === 'delivered').length;
             const cancelledOrders = ordersList.filter(o => o.status === 'cancelled').length;
 
-            // Calculate revenue
-            const totalRevenue = ordersList.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+            // Calculate revenue (only from confirmed/delivered orders - not cancelled/pending)
+            const paidOrders = ordersList.filter(o =>
+                o.status === 'confirmed' || o.status === 'delivered'
+            );
+            const totalRevenue = paidOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -88,15 +91,15 @@ export function useAnalytics() {
             const monthAgo = new Date(today);
             monthAgo.setMonth(monthAgo.getMonth() - 1);
 
-            const revenueToday = ordersList
+            const revenueToday = paidOrders
                 .filter(o => new Date(o.created_at) >= today)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
-            const revenueThisWeek = ordersList
+            const revenueThisWeek = paidOrders
                 .filter(o => new Date(o.created_at) >= weekAgo)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
-            const revenueThisMonth = ordersList
+            const revenueThisMonth = paidOrders
                 .filter(o => new Date(o.created_at) >= monthAgo)
                 .reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
 
