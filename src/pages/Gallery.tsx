@@ -56,12 +56,12 @@ const GalleryPage = () => {
     switch (sortBy) {
       case 'price-low':
         result = result.sort((a, b) =>
-          calculatePrice(a.priceCFA, currency, rate) - calculatePrice(b.priceCFA, currency, rate)
+          calculatePrice(a.priceCFA, currency, rate, a.price_ngn) - calculatePrice(b.priceCFA, currency, rate, b.price_ngn)
         );
         break;
       case 'price-high':
         result = result.sort((a, b) =>
-          calculatePrice(b.priceCFA, currency, rate) - calculatePrice(a.priceCFA, currency, rate)
+          calculatePrice(b.priceCFA, currency, rate, b.price_ngn) - calculatePrice(a.priceCFA, currency, rate, a.price_ngn)
         );
         break;
       case 'name':

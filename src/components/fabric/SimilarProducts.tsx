@@ -19,7 +19,7 @@ const SimilarProducts = ({ fabrics, currency }: SimilarProductsProps) => {
             <h2 className="font-display text-2xl mb-6">Similar Designs You'll Love</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {fabrics.map((fabric, index) => {
-                    const price = calculatePrice(fabric.priceCFA, currency, rate);
+                    const price = calculatePrice(fabric.priceCFA, currency, rate, fabric.price_ngn);
                     return (
                         <motion.div
                             key={fabric.id}

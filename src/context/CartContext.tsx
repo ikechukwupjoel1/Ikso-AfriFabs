@@ -103,7 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const getCartTotal = (currency: Currency, exchangeRate: number) => {
         return items.reduce((total, item) => {
-            const price = calculatePrice(item.fabric.priceCFA, currency, exchangeRate);
+            const price = calculatePrice(item.fabric.priceCFA, currency, exchangeRate, item.fabric.price_ngn);
             return total + (price * item.pieces); // Price per piece × number of pieces
         }, 0);
     };

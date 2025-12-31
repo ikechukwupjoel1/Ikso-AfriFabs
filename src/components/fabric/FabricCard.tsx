@@ -26,7 +26,7 @@ const FabricCard = ({ fabric, currency }: FabricCardProps) => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { rate } = useExchangeRate();
 
-  const price = calculatePrice(fabric.priceCFA, currency, rate);
+  const price = calculatePrice(fabric.priceCFA, currency, rate, fabric.price_ngn);
   const formattedPrice = formatPrice(price, currency);
   const isLiked = isFavorite(fabric.id);
   const inCart = isInCart(fabric.id);

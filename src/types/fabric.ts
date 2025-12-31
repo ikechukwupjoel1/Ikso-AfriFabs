@@ -13,9 +13,11 @@ export interface Fabric {
   description: string;
   story?: FabricStory;  // Cultural story
   priceCFA: number;     // Base price in CFA per piece (6 yards)
+  price_cfa?: number;   // Database CFA price field
+  price_ngn?: number;   // Database NGN price field
   image: string;        // Primary image
   gallery?: string[];   // Additional images
-  category: 'ankara' | 'kente' | 'adire' | 'aso-oke';
+  category: 'ankara' | 'kente' | 'adire' | 'aso-oke' | string;
   inStock: boolean;
   tags: string[];
 }

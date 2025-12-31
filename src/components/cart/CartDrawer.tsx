@@ -25,7 +25,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
         let message = "Hello! I'd like to order the following fabrics from Ikso AfriFabs:\n\n";
 
         items.forEach((item, index) => {
-            const price = calculatePrice(item.fabric.priceCFA, currency, rate);
+            const price = calculatePrice(item.fabric.priceCFA, currency, rate, item.fabric.price_ngn);
             message += `${index + 1}. ${item.fabric.name}\n`;
             message += `   - Quantity: ${item.pieces} piece${item.pieces > 1 ? 's' : ''} (${item.pieces * 6} yards)\n`;
             message += `   - Price: ${formatPrice(price, currency)}\n\n`;
@@ -82,7 +82,7 @@ const CartDrawer = ({ isOpen, onClose, currency }: CartDrawerProps) => {
                                 </div>
                             ) : (
                                 items.map((item) => {
-                                    const price = calculatePrice(item.fabric.priceCFA, currency, rate);
+                                    const price = calculatePrice(item.fabric.priceCFA, currency, rate, item.fabric.price_ngn);
                                     return (
                                         <motion.div
                                             key={item.fabricId}

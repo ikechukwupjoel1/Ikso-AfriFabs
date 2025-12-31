@@ -353,7 +353,7 @@ const Checkout = () => {
                                                 <div className="text-right">
                                                     <p className="font-medium text-sm">
                                                         {formatPrice(
-                                                            calculatePrice(item.fabric.priceCFA, currency, rate) * item.pieces,
+                                                            calculatePrice(item.fabric.priceCFA, currency, rate, item.fabric.price_ngn) * item.pieces,
                                                             currency
                                                         )}
                                                     </p>

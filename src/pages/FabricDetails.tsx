@@ -66,7 +66,7 @@ const FabricDetails = () => {
 
     const { rate } = useExchangeRate();
 
-    const price = calculatePrice(fabric.priceCFA, currency, rate);
+    const price = calculatePrice(fabric.priceCFA, currency, rate, fabric.price_ngn);
     const totalPrice = price * pieces; // Price per piece × number of pieces
 
     const handleAddToCart = () => {
