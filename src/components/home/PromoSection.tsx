@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -24,10 +24,10 @@ const PromoSection = () => {
                     <div className="relative flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
-                                <Sparkles className="w-7 h-7 text-white" />
+                                <Award className="w-7 h-7 text-white" />
                             </div>
                             <div className="text-white">
-                                <h3 className="font-display text-xl md:text-2xl">Authentic African Fabrics ✨</h3>
+                                <h3 className="font-display text-xl md:text-2xl">Authentic African Fabrics</h3>
                                 <p className="text-white/80 text-sm md:text-base">
                                     Premium quality wax prints, straight from West Africa to your doorstep
                                 </p>
