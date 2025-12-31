@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, DollarSign, Package } from 'lucide-react';
+import { Loader2, DollarSign, Package, RefreshCw } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
     Select,
     SelectContent,
@@ -49,6 +50,7 @@ export function BulkPriceEditor({
     const [newPriceNgn, setNewPriceNgn] = useState<string>('');
     const [newPriceCfa, setNewPriceCfa] = useState<string>('');
     const [lastEdited, setLastEdited] = useState<'ngn' | 'cfa' | null>(null);
+    const [autoConvert, setAutoConvert] = useState(true);
 
     // Group fabrics by name
     const fabricGroups = useMemo(() => {
@@ -85,6 +87,7 @@ export function BulkPriceEditor({
             setNewPriceNgn('');
             setNewPriceCfa('');
             setLastEdited(null);
+            setAutoConvert(true);
         }
     }, [open]);
 
@@ -96,8 +99,10 @@ export function BulkPriceEditor({
         }
     }, [selectedGroup]);
 
-    // Auto-convert prices
+    // Auto-convert prices (only if autoConvert is enabled)
     useEffect(() => {
+        if (!autoConvert) return;
+
         if (lastEdited === 'ngn' && newPriceNgn) {
             const ngn = parseFloat(newPriceNgn);
             if (!isNaN(ngn) && ngn > 0) {
@@ -109,7 +114,7 @@ export function BulkPriceEditor({
                 setNewPriceNgn(cfaToNgnSync(cfa).toString());
             }
         }
-    }, [newPriceNgn, newPriceCfa, lastEdited]);
+    }, [newPriceNgn, newPriceCfa, lastEdited, autoConvert]);
 
     const handleNgnChange = (value: string) => {
         setNewPriceNgn(value);
@@ -236,6 +241,27 @@ export function BulkPriceEditor({
                         </div>
                     )}
 
+                    {/* Auto-Convert Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                                <Label htmlFor="auto-convert" className="text-sm font-medium cursor-pointer">
+                                    Auto-convert prices
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    Automatically calculate the other currency
+                                </p>
+                            </div>
+                        </div>
+                        <Switch
+                            id="auto-convert"
+                            checked={autoConvert}
+                            onCheckedChange={setAutoConvert}
+                            disabled={!selectedName}
+                        />
+                    </div>
+
                     {/* Price Inputs */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -275,9 +301,11 @@ export function BulkPriceEditor({
                         </div>
                     </div>
 
-                    <p className="text-xs text-muted-foreground">
-                        💡 Tip: Enter either NGN or CFA price - the other will be auto-calculated using the current exchange rate.
-                    </p>
+                    {autoConvert && (
+                        <p className="text-xs text-muted-foreground">
+                            💡 Tip: Enter either NGN or CFA price - the other will be auto-calculated using the current exchange rate.
+                        </p>
+                    )}
                 </div>
 
                 <DialogFooter>
