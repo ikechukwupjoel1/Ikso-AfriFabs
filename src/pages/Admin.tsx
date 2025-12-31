@@ -50,6 +50,7 @@ import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HeroManager } from '@/components/admin/HeroManager';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { AuditLogViewer } from '@/components/admin/AuditLogViewer';
+import { BulkPriceEditor } from '@/components/admin/BulkPriceEditor';
 import { fabrics as localFabrics } from '@/data/fabrics';
 import { generateInvoice } from '@/utils/invoiceGenerator';
 import { logAdminAction } from '@/utils/auditLog';
@@ -90,6 +91,7 @@ const Admin = () => {
     const [selectedFabrics, setSelectedFabrics] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
+    const [showBulkPriceEditor, setShowBulkPriceEditor] = useState(false);
 
     // Discount dialog states
     const [showDiscountDialog, setShowDiscountDialog] = useState(false);
@@ -1127,6 +1129,16 @@ const Admin = () => {
                                                         className="pl-9 w-[200px]"
                                                     />
                                                 </div>
+                                                {canManageAdmins && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => setShowBulkPriceEditor(true)}
+                                                    >
+                                                        <Tag className="w-4 h-4 mr-2" />
+                                                        Bulk Price Update
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     size="sm"
                                                     onClick={() => {
@@ -1650,7 +1662,16 @@ const Admin = () => {
                 onSuccess={fetchFabrics}
             />
 
+            {/* Bulk Price Editor Dialog */}
+            <BulkPriceEditor
+                open={showBulkPriceEditor}
+                onOpenChange={setShowBulkPriceEditor}
+                fabrics={fabrics}
+                onSuccess={fetchFabrics}
+            />
+
             {/* Create Order Dialog */}
+
             <Dialog open={showCreateOrderDialog} onOpenChange={setShowCreateOrderDialog}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>

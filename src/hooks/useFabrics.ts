@@ -1,8 +1,29 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Fabric } from '@/types/fabric';
 
 export const useFabrics = () => {
+    const queryClient = useQueryClient();
+
+    // Set up realtime subscription to invalidate cache when fabrics change
+    useEffect(() => {
+        const channel = supabase
+            .channel('fabrics_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'fabrics' },
+                () => {
+                    // Invalidate and refetch fabrics query when any change occurs
+                    queryClient.invalidateQueries({ queryKey: ['fabrics'] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
+
     return useQuery({
         queryKey: ['fabrics'],
         queryFn: async (): Promise<Fabric[]> => {
@@ -40,6 +61,6 @@ export const useFabrics = () => {
                 in_stock: fabric.in_stock ?? true,
             }));
         },
-        staleTime: 1000 * 60 * 2, // 2 minutes - refresh more frequently for admin changes
+        staleTime: 1000 * 60 * 2, // 2 minutes - but realtime will invalidate when needed
     });
 };
