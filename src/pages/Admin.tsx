@@ -51,7 +51,6 @@ import { HeroManager } from '@/components/admin/HeroManager';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { AuditLogViewer } from '@/components/admin/AuditLogViewer';
 import { BulkPriceEditor } from '@/components/admin/BulkPriceEditor';
-import { fabrics as localFabrics } from '@/data/fabrics';
 import { generateInvoice } from '@/utils/invoiceGenerator';
 import { logAdminAction } from '@/utils/auditLog';
 
@@ -227,23 +226,18 @@ const Admin = () => {
 
     const fetchFabrics = async () => {
         try {
-            // Try to fetch from Supabase first
+            // Fetch from Supabase database only
             const { data, error } = await supabase
                 .from('fabrics')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            // If database has fabrics, use them; otherwise use local data
-            if (data && data.length > 0) {
-                setFabrics(data);
-            } else {
-                // Use local fabrics data
-                setFabrics(localFabrics);
-            }
+            if (error) throw error;
+
+            setFabrics(data || []);
         } catch (err) {
             console.error('Error fetching fabrics:', err);
-            // Fallback to local data on error
-            setFabrics(localFabrics);
+            setFabrics([]);
         }
     };
 
